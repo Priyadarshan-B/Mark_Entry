@@ -49,7 +49,7 @@ app.use("/api",course)
 app.use("/api",student)
 app.use('/api',testtype)
 app.use('/api',mark)
-
+ 
 // port
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);

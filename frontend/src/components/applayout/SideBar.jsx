@@ -59,7 +59,7 @@ function SideBar({ open, resource, onSidebarItemSelect, handleSideBar }) {
         //   navigate('/attendance/login');
         //   return;
         // }
-        const response = await requestApi("GET", `/resources?role=2`);
+        const response = await requestApi("GET", `/resources?role=${role}`);
 
         // if (response.status === 400) {
         //   navigate("/attendance/login");

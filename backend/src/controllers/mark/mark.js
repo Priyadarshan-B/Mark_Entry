@@ -22,32 +22,38 @@ exports.post_marks = async (req, res) => {
     }
 
     try {
-        const insertQuery = `
-            INSERT INTO marks(student, course, faculty, test_type, mark) 
-            VALUES(?,?,?,?,?);
-        `;
-
-        const checkDuplicateQuery = `
-            SELECT COUNT(*) AS count 
+        const values = marksArray.map(({ student, course, faculty, test_type, mark }) => [student, course, faculty, test_type, mark]);
+        const duplicateCheckQuery = `
+            SELECT student, course, faculty, test_type 
             FROM marks 
-            WHERE student = ? AND course = ? AND faculty = ? AND test_type = ?;
+            WHERE (student, course, faculty, test_type) 
+            IN (${values.map(() => '(?,?,?,?)').join(',')});
         `;
+        
+        const { result: duplicates } = await post_database(duplicateCheckQuery, values.flat());
+        console.log("Duplicate check result:", duplicates);
 
-        for (const markRecord of marksArray) {
-            const { faculty, course, student, test_type, mark } = markRecord;
-
-            if (!faculty || !course || !student || !test_type || !mark) {
-                return res.status(400).json({ error: "All fields are required for each record" });
-            }
-            const duplicateCheckResult = await post_database(checkDuplicateQuery, [student, course, faculty, test_type]);
-
-            if (duplicateCheckResult[0].count > 0) {
-                console.log(`Duplicate entry found for student ${student}, course ${course}, test_type ${test_type}. Skipping...`);
-                continue; 
-            }
-            await post_database(insertQuery, [student, course, faculty, test_type, mark]);
+        if (!Array.isArray(duplicates)) {
+            return res.status(500).json({ error: "Unexpected response format from the database" });
         }
-        res.status(200).json({ message: "Marks posted successfully, duplicates skipped" });
+        const duplicateKeys = duplicates.map(({ student, course, faculty, test_type }) => 
+            `${student}-${course}-${faculty}-${test_type}`);
+        const newRecords = marksArray.filter(({ student, course, faculty, test_type }) => 
+            !duplicateKeys.includes(`${student}-${course}-${faculty}-${test_type}`)
+        );
+
+        if (newRecords.length === 0) {
+            return res.status(200).json({ message: "No new marks to insert, all records are duplicates" });
+        }
+        const insertQuery = `
+            INSERT INTO marks (student, course, faculty, test_type, mark) 
+            VALUES ${newRecords.map(() => '(?,?,?,?,?)').join(',')};
+        `;
+        await post_database(insertQuery, newRecords.flatMap(({ student, course, faculty, test_type, mark }) => 
+            [student, course, faculty, test_type, mark]
+        ));
+
+        res.status(200).json({ message: `Marks posted successfully. Inserted ${newRecords.length} new records, duplicates skipped.` });
     } catch (err) {
         console.error("Error Posting Marks..", err);
         res.status(500).json({ error: "Error Posting Marks.." });

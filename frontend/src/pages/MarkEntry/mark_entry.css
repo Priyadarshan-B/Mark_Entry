@@ -5,3 +5,8 @@
 .m-select{
     flex: 1;
 }
+.mui-table{
+    background-color: var(--background-2);
+    padding: 10px;
+    border-radius: 10px;
+}

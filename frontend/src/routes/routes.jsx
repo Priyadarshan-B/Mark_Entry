@@ -10,6 +10,7 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/error" element={<Error />} />
       <Route path="/mark" element={<MarkEntry />} />
       
