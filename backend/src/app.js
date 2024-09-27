@@ -13,6 +13,7 @@ const resources_routes = require('./routes/auth/res_route')
 const course = require('./routes/course/course')
 const student = require('./routes/student/student')
 const testtype = require('./routes/test_type/test_type')
+const mark = require('./routes/marks/marks')
 
 const morgan_config = morgan(
     ":method :url :status :res[content-length] - :response-time ms"
@@ -42,11 +43,12 @@ app.use(cors(cors_config));
 app.use(morgan_config);
 
 // routes
-app.use("/api/auth", auth_routes);
-app.use("/api", resources_routes);
-app.use("/api", course)
+app.use("/api/auth",auth_routes);
+app.use("/api",resources_routes);
+app.use("/api",course)
 app.use("/api",student)
 app.use('/api',testtype)
+app.use('/api',mark)
 
 // port
 app.listen(port, () => {

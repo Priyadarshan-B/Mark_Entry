@@ -1,0 +1,7 @@
+.dropdowns{
+    display: flex;
+    gap: 10px;
+}
+.m-select{
+    flex: 1;
+}
