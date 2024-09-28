@@ -9,6 +9,7 @@ import {
   TextField,
   Button as MUIButton,
 } from "@mui/material";
+import Button from "../../components/Button/Button";
 import requestApi from "../../components/utils/axios";
 import { getDecryptedCookie } from "../../components/utils/encrypt";
 import customStyles from "../../components/applayout/selectTheme";
@@ -160,8 +161,12 @@ function MarkEntry() {
                 </TableBody>
               </Table>
             )}
+            <br />
             {paginatedStudents.length > 0 && (
-              <MUIButton variant="contained" onClick={handleSubmit}>Submit Marks</MUIButton>
+              <Button onClick={handleSubmit}
+              label='Submit Marks'
+              // style={{float:'right'}}
+              />
             )}
           </div>
           {/* Pagination controls */}
