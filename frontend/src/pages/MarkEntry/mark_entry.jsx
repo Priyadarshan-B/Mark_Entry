@@ -6,14 +6,15 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  TextField,
   Button as MUIButton,
 } from "@mui/material";
 import Button from "../../components/Button/Button";
 import requestApi from "../../components/utils/axios";
 import { getDecryptedCookie } from "../../components/utils/encrypt";
 import customStyles from "../../components/applayout/selectTheme";
+import InputBox from "../../components/TextBox/textbox";
 import "./mark_entry.css";
+import toast from "react-hot-toast";
 
 function MarkEntry() {
   const [courses, setCourses] = useState([]);
@@ -22,11 +23,11 @@ function MarkEntry() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedTestType, setSelectedTestType] = useState(null);
   const [marks, setMarks] = useState({});
+  const [maxMark, setMaxMark] = useState(null); 
   const [currentPage, setCurrentPage] = useState(0);
-  const [pageSize] = useState(5); // Default to show 5 students per page
+  const [pageSize] = useState(5);
   const id = getDecryptedCookie("id");
 
-  // Fetch courses for the first select
   useEffect(() => {
     const fetchCourses = async () => {
       const result = await requestApi("GET", `/course?faculty=${id}`);
@@ -65,8 +66,18 @@ function MarkEntry() {
     }
   }, [selectedCourse, selectedTestType]);
 
+  useEffect(() => {
+    if (selectedTestType) {
+      setMaxMark(selectedTestType.max_mark);
+      console.log(maxMark)
+    } else {
+      setMaxMark(null); 
+    }
+  }, [selectedTestType]);
+
   const handleMarkChange = (studentId, value) => {
-    setMarks((prev) => ({ ...prev, [studentId]: value }));
+    const parsedValue = Math.min(parseInt(value, 10), maxMark); 
+    setMarks((prev) => ({ ...prev, [studentId]: parsedValue }));
   };
 
   const handleSubmit = async () => {
@@ -80,15 +91,18 @@ function MarkEntry() {
 
     const result = await requestApi("POST", "/mark", marksData);
     if (result.success) {
-      alert("Marks submitted successfully!");
+      toast.success("Marks Added...")
     } else {
       console.error("Error submitting marks:", result.error);
+      toast.error("Error Adding Marks")
     }
   };
 
-  // Handle pagination
   const totalPages = Math.ceil(students.length / pageSize);
-  const paginatedStudents = students.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
+  const paginatedStudents = students.slice(
+    currentPage * pageSize,
+    (currentPage + 1) * pageSize
+  );
 
   return (
     <div>
@@ -109,10 +123,11 @@ function MarkEntry() {
           options={testTypes.map((test) => ({
             value: test.id,
             label: test.test,
+            max_mark:test.max_mark
           }))}
           onChange={(option) => {
             setSelectedTestType(option);
-            setMarks({}); // Clear marks when test type changes
+            setMarks({}); 
           }}
           styles={customStyles}
           placeholder="Select Test Type"
@@ -128,34 +143,40 @@ function MarkEntry() {
               <Table>
                 <TableHead sx={{ whiteSpace: "nowrap" }}>
                   <TableRow>
-                    <TableCell><b>Name</b></TableCell>
-                    <TableCell><b>Register Number</b></TableCell>
-                    <TableCell><b>Year</b></TableCell>
-                    <TableCell><b>Department</b></TableCell>
-                    <TableCell><b>Marks</b> {selectedTestType?.max_mark}</TableCell>
+                    <TableCell>
+                      <b>Name</b>
+                    </TableCell>
+                    <TableCell>
+                      <b>Register Number</b>
+                    </TableCell>
+                    <TableCell>
+                      <b>Year</b>
+                    </TableCell>
+                    <TableCell>
+                      <b>Department</b>
+                    </TableCell>
+                    <TableCell>
+                      <b>Marks</b> {maxMark && `(Max: ${maxMark})`} {/* Display max_mark */}
+                    </TableCell>
                   </TableRow>
                 </TableHead>
-                <TableBody sx={{ whiteSpace: 'nowrap' }}>
+                <TableBody sx={{ whiteSpace: "nowrap" }}>
                   {paginatedStudents.map((student) => (
                     <TableRow key={student.student_id}>
                       <TableCell>{student.student_name}</TableCell>
                       <TableCell>{student.registration_number}</TableCell>
                       <TableCell>{student.year_label}</TableCell>
                       <TableCell>{student.department_name}</TableCell>
-                      <TableCell>
-                        <TextField
-                          type="number"
-                          size="small"
-                          sx={{ width: "100px" }}
-                          value={marks[student.student_id] || ""}
-                          onChange={(e) =>
-                            handleMarkChange(student.student_id, e.target.value)
-                          }
-                          inputProps={{
-                            max: selectedTestType?.max_mark, // Set max limit based on selected test type
-                          }}
-                        />
-                      </TableCell>
+                     <TableCell>
+                      <InputBox
+                        type="number"
+                        value={marks[student.student_id] || ""}
+                        onChange={(e) =>
+                          handleMarkChange(student.student_id, e.target.value)
+                        }
+                        max={maxMark || ""} 
+                      />
+                     </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -163,13 +184,9 @@ function MarkEntry() {
             )}
             <br />
             {paginatedStudents.length > 0 && (
-              <Button onClick={handleSubmit}
-              label='Submit Marks'
-              // style={{float:'right'}}
-              />
+              <Button onClick={handleSubmit} label="Submit Marks" />
             )}
           </div>
-          {/* Pagination controls */}
           <div className="pagination">
             <MUIButton
               disabled={currentPage === 0}
@@ -180,7 +197,9 @@ function MarkEntry() {
             <span>{`Page ${currentPage + 1} of ${totalPages}`}</span>
             <MUIButton
               disabled={currentPage >= totalPages - 1}
-              onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
+              }
             >
               Next
             </MUIButton>

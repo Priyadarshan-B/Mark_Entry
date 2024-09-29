@@ -7,7 +7,12 @@ const session = require("express-session");
 const passportConfig = require("./config/passport");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
+// middleware
+const authJWT = require('./middleware/authenticate')
+const limiter = require('./middleware/rateLimiter')
+const restrictOrigin = require('./middleware/restrictOrigins')
 
+// routes import
 const auth_routes = require('./routes/auth/auth_routes')
 const resources_routes = require('./routes/auth/res_route')
 const course = require('./routes/course/course')
@@ -42,8 +47,11 @@ const cors_config = {
 app.use(cors(cors_config));
 app.use(morgan_config);
 
-// routes
+// auth routes
 app.use("/api/auth",auth_routes);
+// middleware
+// app.use([authJWT, limiter, restrictOrigin])
+// api routes
 app.use("/api",resources_routes);
 app.use("/api",course)
 app.use("/api",student)
