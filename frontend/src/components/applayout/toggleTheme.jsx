@@ -17,7 +17,8 @@ const lightModeProperties = {
     "--button-hover-1": "#fffff",
     "--head-1": "#2a3645",
     "--pop-button": "#2c7cf3",
-    "--error":"#f4f6fa"
+    "--error":"#f4f6fa",
+    "--disable-btn":"cdcdcd"
 
 };
 
@@ -34,7 +35,9 @@ const darkModeProperties = {
     "--button-hover-1": "#fffff",
     "--head-1": "#1e2631",
     "--pop-button": "#64a2ff",
-    "--error":"#2a3645"
+    "--error":"#2a3645",
+    "--disable-btn":"5d5d5d"
+
 
 
 };

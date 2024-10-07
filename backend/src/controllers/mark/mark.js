@@ -109,10 +109,10 @@ exports.update_marks = async(req, res)=>{
     AND status = '1'
     `
     await post_database(query, [mark, student, course,test_type ])
-    res.status(200).json({message:"Marks Updated.."})}
+    res.status(200).json({message:"success"})}
     catch(err){
         console.error("Error Updating Marks..", err);
-        res.status(500).json({ error: "Error Updating Marks.." });
+        res.status(500).json({ error: "error" });
     }
 }
 
@@ -127,21 +127,32 @@ exports.get_mark_edit = async(req, res)=>{
     s.id AS student,
     s.name AS 'STUDENT NAME',
     s.reg_no AS 'REGISTER NUMBER',
-    c.id AS course,
     c.code AS 'COURSE CODE',
     c.name AS 'COURSE NAME',
     MAX(CASE WHEN t.id = 1 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - I',
+    1 AS 'PERIODICAL_TEST_1_ID',  -- Include test type id for each test
     MAX(CASE WHEN t.id = 2 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - II',
+    2 AS 'PERIODICAL_TEST_2_ID',
     MAX(CASE WHEN t.id = 3 THEN IFNULL(m.mark, 0) END) AS 'FORMATIVE ASSESSMENT',
+    3 AS 'FORMATIVE_ASSESSMENT_ID',
     MAX(CASE WHEN t.id = 4 THEN IFNULL(m.mark, 0) END) AS 'LAB CYCLE',
+    4 AS 'LAB_CYCLE_ID',
     MAX(CASE WHEN t.id = 5 THEN IFNULL(m.mark, 0) END) AS 'TUTORIAL',
+    5 AS 'TUTORIAL_ID',
     MAX(CASE WHEN t.id = 6 THEN IFNULL(m.mark, 0) END) AS 'ASSIGNMENT 1',
+    6 AS 'ASSIGNMENT_1_ID',
     MAX(CASE WHEN t.id = 7 THEN IFNULL(m.mark, 0) END) AS 'ASSIGNMENT 2',
+    7 AS 'ASSIGNMENT_2_ID',
     MAX(CASE WHEN t.id = 8 THEN IFNULL(m.mark, 0) END) AS 'ASSIGNMENT 3',
+    8 AS 'ASSIGNMENT_3_ID',
     MAX(CASE WHEN t.id = 9 THEN IFNULL(m.mark, 0) END) AS 'OTHER ASSESSMENT 1',
+    9 AS 'OTHER_ASSESSMENT_1_ID',
     MAX(CASE WHEN t.id = 10 THEN IFNULL(m.mark, 0) END) AS 'OTHER ASSESSMENT 2',
-    MAX(CASE WHEN t.id = 11 THEN IFNULL(m.mark, 0) END) AS 'OTHER ASSESSMENT 2',
-    MAX(CASE WHEN t.id = 12 THEN IFNULL(m.mark, 0) END) AS 'OPEN BOOK TEST'
+    10 AS 'OTHER_ASSESSMENT_2_ID',
+    MAX(CASE WHEN t.id = 11 THEN IFNULL(m.mark, 0) END) AS 'OTHER ASSESSMENT 3',
+    10 AS 'OTHER_ASSESSMENT_3_ID',
+    MAX(CASE WHEN t.id = 12 THEN IFNULL(m.mark, 0) END) AS 'OPEN BOOK TEST',
+    12 AS 'OPEN_BOOK_TEST_ID'
 FROM 
     students s
 LEFT JOIN 
@@ -156,6 +167,7 @@ GROUP BY
     s.id, s.name, s.reg_no, c.code, c.name
 ORDER BY 
     s.id;
+
 `
         const getMarksEdit = await get_database(query, [course])
         res.json(getMarksEdit)

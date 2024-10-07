@@ -39,22 +39,24 @@
   
   .pagination {
     display: flex;
-    justify-content: space-between;
+    justify-content: space-evenly;
     align-items: center;
     margin-top: 10px;
+    color: var(--text);
   }
   
   .pagination button {
     padding: 5px 10px;
     margin: 0 5px;
     border: none;
-    background-color: #007BFF; /* Bootstrap primary color */
-    color: white;
+    background-color: #007BFF;
+    color: rgb(251, 251, 251);
     cursor: pointer;
   }
   
   .pagination button:disabled {
-    background-color: #cccccc; /* Gray */
+    background-color: var(--disable-btn);
+    color: var(--text);
     cursor: not-allowed;
   }
   .select-course{

@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import BorderColorIcon from '@mui/icons-material/BorderColor';
+import BorderColorTwoToneIcon from '@mui/icons-material/BorderColorTwoTone';import SpaceDashboardTwoToneIcon from '@mui/icons-material/SpaceDashboardTwoTone';
 import requestApi from "../utils/axios";
 import "./styles.css";
 import { getDecryptedCookie } from "../utils/encrypt";
 
 function getIconComponent(iconPath) {
   switch (iconPath) {
-    case 'BorderColorIcon':
-      return <BorderColorIcon style={{ color: '#f57d93' }} className="custom-sidebar-icon" />;
-      
+    case 'BorderColorTwoToneIcon':
+      return <BorderColorTwoToneIcon style={{ color: '#f57d93' ,fontSize:'30px'}} className="custom-sidebar-icon" />;
+      case 'SpaceDashboardTwoToneIcon':
+        return <SpaceDashboardTwoToneIcon style={{ color: '#0084ff',fontSize:'30px' }} className="custom-sidebar-icon" />;
     default:
       return null;
   }

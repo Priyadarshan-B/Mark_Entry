@@ -1,129 +1,19 @@
-// import React, { useState, useEffect } from "react";
-// import { DataGrid } from "@mui/x-data-grid";
-// import { Button } from "@mui/material";
-// import Select from "react-select";
-// import * as XLSX from "xlsx";
-// import requestApi from "../utils/axios";
-// import customStyles from "../applayout/selectTheme";
-// import './table.css'
-
-// function MuiTableComponent() {
-//   const [columns, setColumns] = useState([]);
-//   const [rows, setRows] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [courses, setCourses] = useState([]);
-//   const [selectedCourse, setSelectedCourse] = useState(null);
-
-//   useEffect(() => {
-//     const fetchCourses = async () => {
-//       try {
-//         const response = await requestApi("GET", "/course-all");
-//         const courseOptions = response.data.map(course => ({
-//           value: course.id,
-//           label: `${course.code} - ${course.name}`,
-//         }));
-//         setCourses(courseOptions);
-//       } catch (error) {
-//         console.error("Error fetching courses:", error);
-//       }
-//     };
-
-//     fetchCourses();
-//   }, []);
-
-//   useEffect(() => {
-//     if (selectedCourse) {
-//       const fetchData = async () => {
-//         setLoading(true);
-//         try {
-//           const response = await requestApi("GET", `/marks-report?course=${selectedCourse.value}`);
-//           if (response.data) {
-//             const data = response.data;
-
-//             const columnDefs = Object.keys(data[0]).map((key) => ({
-//               field: key,
-//               headerName: key.replace(/_/g, " "), 
-//               width: 200,
-//             }));
-
-//             const formattedData = data.map(row => {
-//               return Object.fromEntries(
-//                 Object.entries(row).map(([key, value]) => [key, value === null ? "--" : value])
-//               );
-//             });
-
-//             setColumns(columnDefs);
-//             setRows(formattedData);
-//           }
-//           setLoading(false);
-//         } catch (error) {
-//           console.error("Error fetching data:", error);
-//           setLoading(false);
-//         }
-//       };
-
-//       fetchData();
-//     }
-//   }, [selectedCourse]);
-
-//   const handleExport = () => {
-//     const exportData = rows.map(row => ({
-//       ...row,
-//       // course: `${selectedCourse.label.split(' - ')[0]} - ${selectedCourse.label.split(' - ')[1]}`, // Add course info
-//     }));
-
-//     const ws = XLSX.utils.json_to_sheet(exportData);
-//     const wb = XLSX.utils.book_new();
-//     XLSX.utils.book_append_sheet(wb, ws, "Marks Data");
-    
-//     const fileName = `${selectedCourse.label.split(' - ')[0]} - ${selectedCourse.label.split(' - ')[1]}.xlsx`;
-//     XLSX.writeFile(wb, fileName);
-//   };
-
-//   return (
-//     <div style={{ width: "100%" }}>
-//       <h3>Student Marks Table</h3>
-//       <br />
-
-//       <div className="select-course">
-//         <Select
-//           options={courses}
-//           value={selectedCourse}
-//           onChange={setSelectedCourse}
-//           styles={customStyles}
-//           placeholder="Select a Course"
-//         />
-//       </div>
-//       <br />
-//       {!loading ? (
-//         <>
-//           <DataGrid
-//             rows={rows}
-//             columns={columns}
-//             pageSize={5}
-//             disableSelectionOnClick
-//           />
-//           <Button variant="contained" color="primary" onClick={handleExport}>
-//             Export to Excel
-//           </Button>
-//         </>
-//       ) : (
-//         <p>Select a Course to view Report...</p>
-//       )}
-//     </div>
-//   );
-// }
-
-// export default MuiTableComponent;
-
 import React, { useState, useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle } from "@mui/material";
+import {
+  TextField,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+} from "@mui/material";
 import Select from "react-select";
+import Button from "../Button/Button";
 import * as XLSX from "xlsx";
 import requestApi from "../utils/axios";
 import customStyles from "../applayout/selectTheme";
-import './table.css';
+import "./table.css";
+import toast from "react-hot-toast";
 
 function MuiTableComponent() {
   const [columns, setColumns] = useState([]);
@@ -131,16 +21,16 @@ function MuiTableComponent() {
   const [loading, setLoading] = useState(true);
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  const [selectedCell, setSelectedCell] = useState(null); // To keep track of the selected cell
-  const [openEditModal, setOpenEditModal] = useState(false); // To open/close the modal
-  const [editedMark, setEditedMark] = useState(''); // The edited value
+  const [selectedCell, setSelectedCell] = useState(null);
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [editedMark, setEditedMark] = useState("");
+  const [maxMark, setMaxMark] = useState(null); 
 
-  // Fetch available courses
   useEffect(() => {
     const fetchCourses = async () => {
       try {
         const response = await requestApi("GET", "/course-all");
-        const courseOptions = response.data.map(course => ({
+        const courseOptions = response.data.map((course) => ({
           value: course.id,
           label: `${course.code} - ${course.name}`,
         }));
@@ -153,26 +43,53 @@ function MuiTableComponent() {
     fetchCourses();
   }, []);
 
-  // Fetch student marks for the selected course
   useEffect(() => {
     if (selectedCourse) {
       const fetchMarks = async () => {
         setLoading(true);
         try {
-          const response = await requestApi("GET", `/marks-edit?course=${selectedCourse.value}`);
+          const response = await requestApi(
+            "GET",
+            `/marks-edit?course=${selectedCourse.value}`
+          );
           if (response.data) {
             const data = response.data;
 
-            const columnDefs = Object.keys(data[0]).map((key) => ({
-              field: key,
-              headerName: key.replace(/_/g, " "), 
-              width: 200,
-            }));
+            const excludeColumns = [
+              "student",
+              "PERIODICAL_TEST_1_ID",
+              "PERIODICAL_TEST_2_ID",
+              "FORMATIVE_ASSESSMENT_ID",
+              "LAB_CYCLE_ID",
+              "TUTORIAL_ID",
+              "ASSIGNMENT_1_ID",
+              "ASSIGNMENT_2_ID",
+              "ASSIGNMENT_3_ID",
+              "OTHER_ASSESSMENT_1_ID",
+              "OTHER_ASSESSMENT_2_ID",
+              "OTHER_ASSESSMENT_3_ID",
+              "OPEN_BOOK_TEST_ID",
+              "student_id",
+            ];
 
-            const formattedData = data.map((row, index) => ({
-              id: index, // Add unique 'id' to each row
-              ...row,
-            }));
+            const columnDefs = Object.keys(data[0])
+              .filter((key) => !excludeColumns.includes(key))
+              .map((key) => ({
+                field: key,
+                headerName: key.replace(/_/g, " "),
+                width: 250,
+                editable: key.includes("TEST") || key.includes("ASSIGNMENT"), 
+              }));
+
+              const formattedData = data.map((row, index) => {
+                const formattedRow = { id: index };
+              
+                for (const key in row) {
+                  formattedRow[key] = row[key] === null ? "--" : row[key];
+                }
+              
+                return formattedRow;
+              });
 
             setColumns(columnDefs);
             setRows(formattedData);
@@ -188,21 +105,84 @@ function MuiTableComponent() {
     }
   }, [selectedCourse]);
 
-  // Handle opening the modal for editing
-  const handleCellClick = (params) => {
-    setSelectedCell(params);
-    setEditedMark(params.value); // Pre-populate with current value
-    setOpenEditModal(true);
+  const handleCellClick = async (params) => {
+    const editableFields = [
+      "PERIODICAL TEST - I",
+      "PERIODICAL TEST - II",
+      "FORMATIVE ASSESSMENT",
+      "LAB CYCLE",
+      "TUTORIAL",
+      "ASSIGNMENT 1",
+      "ASSIGNMENT 2",
+      "ASSIGNMENT 3",
+      "OTHER ASSESSMENT 1",
+      "OTHER ASSESSMENT 2",
+      "OTHER ASSESSMENT 3",
+      "OPEN BOOK TEST",
+    ];
+
+    if (editableFields.includes(params.field)) {
+      setSelectedCell(params);
+      setEditedMark(params.value);
+      setOpenEditModal(true);
+
+      const testTypeMapping = {
+        "PERIODICAL TEST - I": params.row.PERIODICAL_TEST_1_ID,
+        "PERIODICAL TEST - II": params.row.PERIODICAL_TEST_2_ID,
+        "FORMATIVE ASSESSMENT": params.row.FORMATIVE_ASSESSMENT_ID,
+        "LAB CYCLE": params.row.LAB_CYCLE_ID,
+        TUTORIAL: params.row.TUTORIAL_ID,
+        "ASSIGNMENT 1": params.row.ASSIGNMENT_1_ID,
+        "ASSIGNMENT 2": params.row.ASSIGNMENT_2_ID,
+        "ASSIGNMENT 3": params.row.ASSIGNMENT_3_ID,
+        "OTHER ASSESSMENT 1": params.row.OTHER_ASSESSMENT_1_ID,
+        "OTHER ASSESSMENT 2": params.row.OTHER_ASSESSMENT_2_ID,
+        "OTHER ASSESSMENT 3": params.row.OTHER_ASSESSMENT_3_ID,
+        "OPEN BOOK TEST": params.row.OPEN_BOOK_TEST_ID,
+      };
+
+      const testTypeId = testTypeMapping[params.field];
+
+      try {
+        const maxMarkResponse = await requestApi(
+          "GET",
+          `/max-mark?test=${testTypeId}`
+        );
+        setMaxMark(maxMarkResponse.data[0].max_mark);
+      } catch (error) {
+        console.error("Error fetching max mark:", error);
+      }
+    }
   };
 
-  // Handle the change in the text field inside the modal
   const handleMarkChange = (event) => {
     setEditedMark(event.target.value);
   };
 
-  // Save the edited mark
   const saveEditedMark = async () => {
     if (!selectedCell) return;
+
+    if (parseInt(editedMark) > maxMark) {
+      toast.error("Exceeded Marks");
+      return;
+    }
+
+    const testTypeMapping = {
+      "PERIODICAL TEST - I": selectedCell.row.PERIODICAL_TEST_1_ID,
+      "PERIODICAL TEST - II": selectedCell.row.PERIODICAL_TEST_2_ID,
+      "FORMATIVE ASSESSMENT": selectedCell.row.FORMATIVE_ASSESSMENT_ID,
+      "LAB CYCLE": selectedCell.row.LAB_CYCLE_ID,
+      TUTORIAL: selectedCell.row.TUTORIAL_ID,
+      "ASSIGNMENT 1": selectedCell.row.ASSIGNMENT_1_ID,
+      "ASSIGNMENT 2": selectedCell.row.ASSIGNMENT_2_ID,
+      "ASSIGNMENT 3": selectedCell.row.ASSIGNMENT_3_ID,
+      "OTHER ASSESSMENT 1": selectedCell.row.OTHER_ASSESSMENT_1_ID,
+      "OTHER ASSESSMENT 2": selectedCell.row.OTHER_ASSESSMENT_2_ID,
+      "OTHER ASSESSMENT 3": selectedCell.row.OTHER_ASSESSMENT_3_ID,
+      "OPEN BOOK TEST": selectedCell.row.OPEN_BOOK_TEST_ID,
+    };
+
+    const testTypeId = testTypeMapping[selectedCell.field];
 
     const updatedRows = rows.map((row) => {
       if (row.id === selectedCell.id) {
@@ -214,25 +194,28 @@ function MuiTableComponent() {
     setRows(updatedRows);
     setOpenEditModal(false);
 
-    try {
-      // Submit edited value to the backend
-      await requestApi("PUT", '/marks', {
-        student: selectedCell.row.student_id,
-        course: selectedCell.row.course_id,
-        test_type: selectedCell.field, // The field (like periodical_1, lab_cycle, etc.)
-        mark: editedMark
-      });
-      alert('Marks updated successfully');
-    } catch (error) {
-      console.error('Error updating marks', error);
-    }
+    toast.promise(
+      requestApi("PUT", "/mark", {
+        student: selectedCell.row.student,
+        course: selectedCourse.value,
+        test_type: testTypeId,
+        mark: parseInt(editedMark),
+      }),
+      {
+        loading: "Updating marks...",
+        success: "Marks Updated...",
+        error: "Error Updating Marks...",
+      }
+    );
   };
 
-  // Export data to Excel
   const handleExport = async () => {
     try {
-      const response = await requestApi("GET", `/marks-report?course=${selectedCourse.value}`);
-      const exportData = response.data.map(row => ({
+      const response = await requestApi(
+        "GET",
+        `/marks-report?course=${selectedCourse.value}`
+      );
+      const exportData = response.data.map((row) => ({
         ...row,
       }));
 
@@ -240,7 +223,9 @@ function MuiTableComponent() {
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Marks Data");
 
-      const fileName = `${selectedCourse.label.split(' - ')[0]} - ${selectedCourse.label.split(' - ')[1]}.xlsx`;
+      const fileName = `${selectedCourse.label.split(" - ")[0]} - ${
+        selectedCourse.label.split(" - ")[1]
+      }.xlsx`;
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error("Error exporting data:", error);
@@ -269,36 +254,32 @@ function MuiTableComponent() {
             columns={columns}
             pageSize={5}
             disableSelectionOnClick
-            onCellClick={handleCellClick} // Open modal on cell click
-            getRowId={(row) => row.id} // Unique row identifier
+            onCellClick={handleCellClick}
+            getRowId={(row) => row.id}
           />
           <Button
-            variant="contained"
-            color="primary"
             onClick={handleExport}
-            style={{ marginTop: '20px' }}
-          >
-            Export to Excel
-          </Button>
+            style={{ marginTop: "20px" }}
+            label="Export to Excel"
+          />
 
-          {/* Modal for editing */}
           <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
             <DialogTitle>Edit Marks</DialogTitle>
             <DialogContent>
+              <p>Max Marks: {maxMark}</p>
+              <br />
               <TextField
-                fullWidth
-                label={selectedCell ? selectedCell.field.replace(/_/g, " ") : ''}
+                size="small"
+                label={
+                  selectedCell ? selectedCell.field.replace(/_/g, " ") : ""
+                }
                 value={editedMark}
                 onChange={handleMarkChange}
               />
             </DialogContent>
             <DialogActions>
-              <Button onClick={() => setOpenEditModal(false)} color="secondary">
-                Cancel
-              </Button>
-              <Button onClick={saveEditedMark} color="primary">
-                Save
-              </Button>
+              <Button onClick={() => setOpenEditModal(false)} label="Cancel" />
+              <Button onClick={saveEditedMark} label="Save" />
             </DialogActions>
           </Dialog>
         </>

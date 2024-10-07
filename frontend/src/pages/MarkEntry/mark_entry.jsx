@@ -13,6 +13,8 @@ import requestApi from "../../components/utils/axios";
 import { getDecryptedCookie } from "../../components/utils/encrypt";
 import customStyles from "../../components/applayout/selectTheme";
 import InputBox from "../../components/TextBox/textbox";
+import FirstPageTwoToneIcon from '@mui/icons-material/FirstPageTwoTone';
+import LastPageTwoToneIcon from '@mui/icons-material/LastPageTwoTone';
 import "./mark_entry.css";
 import toast from "react-hot-toast";
 
@@ -23,9 +25,10 @@ function MarkEntry() {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [selectedTestType, setSelectedTestType] = useState(null);
   const [marks, setMarks] = useState({});
-  const [maxMark, setMaxMark] = useState(null); 
+  const [maxMark, setMaxMark] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(5);
+  const [searchTerm, setSearchTerm] = useState(""); // State for search input
   const id = getDecryptedCookie("id");
 
   useEffect(() => {
@@ -55,7 +58,10 @@ function MarkEntry() {
   useEffect(() => {
     if (selectedCourse && selectedTestType) {
       const fetchStudents = async () => {
-        const result = await requestApi("GET", `/students?faculty=${id}&test=${selectedTestType.value}&course=${selectedCourse.value}`);
+        const result = await requestApi(
+          "GET",
+          `/students?faculty=${id}&test=${selectedTestType.value}&course=${selectedCourse.value}`
+        );
         if (result.success) {
           setStudents(result.data);
         } else {
@@ -69,37 +75,68 @@ function MarkEntry() {
   useEffect(() => {
     if (selectedTestType) {
       setMaxMark(selectedTestType.max_mark);
-      console.log(maxMark)
     } else {
-      setMaxMark(null); 
+      setMaxMark(null);
     }
   }, [selectedTestType]);
 
   const handleMarkChange = (studentId, value) => {
-    const parsedValue = Math.min(parseInt(value, 10), maxMark); 
-    setMarks((prev) => ({ ...prev, [studentId]: parsedValue }));
+    const parsedValue = parseInt(value, 10);
+
+    if (parsedValue > maxMark) {
+      toast.error(`Mark exceeds maximum allowed: ${maxMark}`);
+    }
+
+    setMarks((prev) => ({
+      ...prev,
+      [studentId]: Math.min(parsedValue),
+    }));
   };
 
   const handleSubmit = async () => {
-    const marksData = students.map((student) => ({
-      student: student.student_id,
-      faculty: parseInt(id),
-      course: selectedCourse.value,
-      mark: parseInt(marks[student.student_id]) || 0,
-      test_type: selectedTestType.value,
-    }));
+    const marksData = students
+      .filter(
+        (student) =>
+          marks[student.student_id] !== undefined &&
+          marks[student.student_id] !== ""
+      )
+      .map((student) => ({
+        student: student.student_id,
+        faculty: parseInt(id),
+        course: selectedCourse.value,
+        mark: parseInt(marks[student.student_id]) || 0,
+        test_type: selectedTestType.value,
+      }));
 
-    const result = await requestApi("POST", "/mark", marksData);
-    if (result.success) {
-      toast.success("Marks Added...")
-    } else {
-      console.error("Error submitting marks:", result.error);
-      toast.error("Error Adding Marks")
+    if (marksData.length === 0) {
+      toast.error("No marks entered to submit.");
+      return;
     }
+
+    toast.promise(requestApi("POST", "/mark", marksData), {
+      loading: "Adding marks...",
+      success: "Marks Added...",
+      error: "Error Adding Marks",
+    });
   };
 
   const totalPages = Math.ceil(students.length / pageSize);
   const paginatedStudents = students.slice(
+    currentPage * pageSize,
+    (currentPage + 1) * pageSize
+  );
+
+  // Function to filter students based on search term
+  const filteredStudents = students.filter((student) => {
+    const { student_name, registration_number } = student;
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+    return (
+      student_name.toLowerCase().includes(lowerCaseSearchTerm) ||
+      registration_number.toLowerCase().includes(lowerCaseSearchTerm)
+    );
+  });
+
+  const paginatedFilteredStudents = filteredStudents.slice(
     currentPage * pageSize,
     (currentPage + 1) * pageSize
   );
@@ -123,11 +160,11 @@ function MarkEntry() {
           options={testTypes.map((test) => ({
             value: test.id,
             label: test.test,
-            max_mark:test.max_mark
+            max_mark: test.max_mark,
           }))}
           onChange={(option) => {
             setSelectedTestType(option);
-            setMarks({}); 
+            setMarks({});
           }}
           styles={customStyles}
           placeholder="Select Test Type"
@@ -138,8 +175,17 @@ function MarkEntry() {
       {selectedCourse && (
         <div>
           <h3>Student List</h3>
+          <br />
+          <InputBox
+            type="text"
+            placeholder="Search by Name or Register Number"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <br />
+          <br />
           <div className="mui-table">
-            {paginatedStudents.length > 0? (
+            {paginatedFilteredStudents.length > 0 ? (
               <Table>
                 <TableHead sx={{ whiteSpace: "nowrap" }}>
                   <TableRow>
@@ -156,59 +202,57 @@ function MarkEntry() {
                       <b>Department</b>
                     </TableCell>
                     <TableCell>
-                      <b>Marks</b> {maxMark && `(Max: ${maxMark})`} {/* Display max_mark */}
+                      <b>Marks</b> {maxMark && `(Max: ${maxMark})`}
                     </TableCell>
                   </TableRow>
                 </TableHead>
-                {paginatedStudents.length >0 ?(<TableBody sx={{ whiteSpace: "nowrap" }}>
-                  {paginatedStudents.map((student) => (
+                <TableBody sx={{ whiteSpace: "nowrap" }}>
+                  {paginatedFilteredStudents.map((student) => (
                     <TableRow key={student.student_id}>
                       <TableCell>{student.student_name}</TableCell>
                       <TableCell>{student.registration_number}</TableCell>
                       <TableCell>{student.year_label}</TableCell>
                       <TableCell>{student.department_name}</TableCell>
-                     <TableCell>
-                      <InputBox
-                        type="number"
-                        value={marks[student.student_id] || ""}
-                        onChange={(e) =>
-                          handleMarkChange(student.student_id, e.target.value)
-                        }
-                        max={maxMark || ""} 
-                      />
-                     </TableCell>
+                      <TableCell>
+                        <InputBox
+                          type="number"
+                          value={marks[student.student_id] || ""}
+                          onChange={(e) =>
+                            handleMarkChange(student.student_id, e.target.value)
+                          }
+                        />
+                      </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>)
-                :
-                (
-                  <h3>No Records...</h3>
-                )}
+                </TableBody>
               </Table>
-            ):(
+            ) : (
               <center>No Records...</center>
             )}
             <br />
-            {paginatedStudents.length > 0 && (
+            {paginatedFilteredStudents.length > 0 && (
               <Button onClick={handleSubmit} label="Submit Marks" />
             )}
           </div>
           <div className="pagination">
-            <MUIButton
-              disabled={currentPage === 0}
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
-            >
-              Previous
-            </MUIButton>
+          
+            <FirstPageTwoToneIcon
+            disabled={currentPage === 0}
+            style={{
+              cursor:'pointer'
+            }}
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 0))}
+            />
             <span>{`Page ${currentPage + 1} of ${totalPages}`}</span>
-            <MUIButton
-              disabled={currentPage >= totalPages - 1}
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))
-              }
-            >
-              Next
-            </MUIButton>
+           
+            <LastPageTwoToneIcon 
+            disabled={currentPage >= totalPages - 1}
+            style={{
+              cursor:'pointer'
+            }}
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(prev + 1, totalPages - 1))}
+            />
           </div>
         </div>
       )}
