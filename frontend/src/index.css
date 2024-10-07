@@ -16,12 +16,14 @@ body {
 }
 *{
   font-family: "Prompt", sans-serif;
-  color: var(--text);
+  /* color: var(--text); */
   box-sizing: border-box;
 }
-h1, h2, h3, h4, h5, h6, label, center{
+h1, h2, h3, h4, h5, h6, label, center, span, p{
   margin: 0; 
+  color: var(--text);
 }
+
 /* a {
   font-weight: 500;
   color: #646cff;

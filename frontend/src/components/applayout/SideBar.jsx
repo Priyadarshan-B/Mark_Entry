@@ -1,44 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import DashboardRoundedIcon from "@mui/icons-material/DashboardRounded";
-import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
-import HikingRoundedIcon from "@mui/icons-material/HikingRounded";
-import DateRangeIcon from "@mui/icons-material/DateRange";
-import ScheduleSendIcon from "@mui/icons-material/ScheduleSend";
-import AdminPanelSettingsSharpIcon from "@mui/icons-material/AdminPanelSettingsSharp";
-import ReceiptLongSharpIcon from "@mui/icons-material/ReceiptLongSharp";
-import WorkOffIcon from "@mui/icons-material/WorkOff";
-import SchoolIcon from "@mui/icons-material/School";
-import AddTaskIcon from '@mui/icons-material/AddTask';
-import SummarizeTwoToneIcon from '@mui/icons-material/SummarizeTwoTone';
+import BorderColorIcon from '@mui/icons-material/BorderColor';
 import requestApi from "../utils/axios";
 import "./styles.css";
 import { getDecryptedCookie } from "../utils/encrypt";
 
 function getIconComponent(iconPath) {
   switch (iconPath) {
-    case 'DashboardRoundedIcon':
-      return <DashboardRoundedIcon style={{ color: '#f57d93' }} className="custom-sidebar-icon" />;
-    case 'HikingRoundedIcon':
-      return <HikingRoundedIcon style={{ color: '#3498db' }} className="custom-sidebar-icon" />;
-    case 'CalendarMonthIcon':
-      return <CalendarMonthIcon style={{ color: '#2eb7a2' }} className="custom-sidebar-icon" />;
-    case 'DateRangeIcon':
-      return <DateRangeIcon style={{ color: '#f39c12' }} className="custom-sidebar-icon" />;
-    case 'ScheduleSendIcon':
-      return <ScheduleSendIcon style={{ color: '#9b59b6' }} className="custom-sidebar-icon" />;
-    case 'AdminPanelSettingsSharpIcon':
-      return <AdminPanelSettingsSharpIcon style={{ color: '#1abc9c' }} className="custom-sidebar-icon" />;
-    case 'ReceiptLongSharpIcon':
-      return <ReceiptLongSharpIcon style={{ color: '#4fb33e' }} className="custom-sidebar-icon" />;
-    case 'WorkOffIcon':
-      return <WorkOffIcon style={{ color: '#95a5a6' }} className="custom-sidebar-icon" />;
-    case 'SchoolIcon':
-      return <SchoolIcon style={{ color: '#d158ff' }} className="custom-sidebar-icon" />;
-    case 'AddTaskIcon':
-      return <AddTaskIcon style={{ color: '#00a8fb' }} className="custom-sidebar-icon" />;
-    case 'SummarizeTwoToneIcon':
-      return <SummarizeTwoToneIcon style={{ color: '#00a8fb' }} className="custom-sidebar-icon" />;
+    case 'BorderColorIcon':
+      return <BorderColorIcon style={{ color: '#f57d93' }} className="custom-sidebar-icon" />;
+      
     default:
       return null;
   }

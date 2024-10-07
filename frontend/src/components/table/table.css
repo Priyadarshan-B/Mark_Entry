@@ -57,4 +57,12 @@
     background-color: #cccccc; /* Gray */
     cursor: not-allowed;
   }
-  
+  .select-course{
+    width: 600px;
+}
+
+@media(max-width:999px){
+    .select-course{
+        width: 100%;
+    }
+}

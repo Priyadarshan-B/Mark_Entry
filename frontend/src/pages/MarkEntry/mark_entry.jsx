@@ -55,7 +55,7 @@ function MarkEntry() {
   useEffect(() => {
     if (selectedCourse && selectedTestType) {
       const fetchStudents = async () => {
-        const result = await requestApi("GET", `/students?faculty=${id}`);
+        const result = await requestApi("GET", `/students?faculty=${id}&test=${selectedTestType.value}&course=${selectedCourse.value}`);
         if (result.success) {
           setStudents(result.data);
         } else {
@@ -139,7 +139,7 @@ function MarkEntry() {
         <div>
           <h3>Student List</h3>
           <div className="mui-table">
-            {paginatedStudents.length > 0 && (
+            {paginatedStudents.length > 0? (
               <Table>
                 <TableHead sx={{ whiteSpace: "nowrap" }}>
                   <TableRow>
@@ -160,7 +160,7 @@ function MarkEntry() {
                     </TableCell>
                   </TableRow>
                 </TableHead>
-                <TableBody sx={{ whiteSpace: "nowrap" }}>
+                {paginatedStudents.length >0 ?(<TableBody sx={{ whiteSpace: "nowrap" }}>
                   {paginatedStudents.map((student) => (
                     <TableRow key={student.student_id}>
                       <TableCell>{student.student_name}</TableCell>
@@ -179,8 +179,14 @@ function MarkEntry() {
                      </TableCell>
                     </TableRow>
                   ))}
-                </TableBody>
+                </TableBody>)
+                :
+                (
+                  <h3>No Records...</h3>
+                )}
               </Table>
+            ):(
+              <center>No Records...</center>
             )}
             <br />
             {paginatedStudents.length > 0 && (

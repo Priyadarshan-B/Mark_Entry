@@ -13,3 +13,21 @@ exports.get_test = async(req, res)=>{
         res.status(500).json({ error: "Error fetching Test types" });
     }
 }
+
+exports.get_max = async(req, res) =>{
+    const test = req.query.test
+    if(!test){
+        return res.status(400).json({error:"test id is required..."})
+    }
+    try{
+        const query = `
+        SELECT max_mark FROM test_type WHERE id = ?
+        `
+        const getMax = await get_database(query, [test])
+        res.json(getMax)
+    }
+    catch(err){
+        console.error("Error fetching Test types", err);
+        res.status(500).json({ error: "Error fetching Test types" });
+    }
+}
