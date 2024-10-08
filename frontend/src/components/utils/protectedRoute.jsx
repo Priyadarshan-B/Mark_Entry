@@ -12,26 +12,23 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const decryptedUserData = getDecryptedCookie("userdata"); 
-      const decryptedRoutes= getDecryptedCookie("allowedRoutes"); 
-
-      let parsedData;
-      parsedData = JSON.parse(decryptedUserData);
-      const { token } = parsedData;
-      const currentPath = window.location.pathname;
-
-      if ( token && decryptedRoutes) {
+      const decryptedUserData = getDecryptedCookie("authToken");
+      const decryptedRoutes = getDecryptedCookie("allowedRoutes");
+      if (decryptedUserData && decryptedRoutes) {
+        const token = decryptedUserData;
+        const currentPath = window.location.pathname;
         const adjustedCurrentPath = currentPath.replace(basePath, ""); 
 
-        if (decryptedRoutes.includes(adjustedCurrentPath)) {
+        if (token && decryptedRoutes.includes(adjustedCurrentPath)) {
           setIsAuthenticated(true);  
         } else {
           setIsAuthenticated(false);  
         }
       } else {
-        setIsAuthenticated(false);  
+        setIsAuthenticated(false); 
       }
-      setIsLoading(false);  
+
+      setIsLoading(false); 
     };
 
     checkAuth();

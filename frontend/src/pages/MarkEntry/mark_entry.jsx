@@ -16,6 +16,7 @@ import InputBox from "../../components/TextBox/textbox";
 import FirstPageTwoToneIcon from '@mui/icons-material/FirstPageTwoTone';
 import LastPageTwoToneIcon from '@mui/icons-material/LastPageTwoTone';
 import "./mark_entry.css";
+import {jwtDecode} from 'jwt-decode';  
 import toast from "react-hot-toast";
 
 function MarkEntry() {
@@ -29,11 +30,14 @@ function MarkEntry() {
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(5);
   const [searchTerm, setSearchTerm] = useState(""); 
-  const decryptedUserData = getDecryptedCookie("userdata");
-  let parsedData;
-  parsedData = JSON.parse(decryptedUserData);
-  console.log(parsedData)
-  const { id } = parsedData;
+  const encryptedAuthToken = getDecryptedCookie("authToken");
+
+  if (!encryptedAuthToken) {
+    throw new Error("Auth token not found");
+  }
+
+  const decodedToken = jwtDecode(encryptedAuthToken); 
+  const { id } = decodedToken;
 
   useEffect(() => {
     const fetchCourses = async () => {

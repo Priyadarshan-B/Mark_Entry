@@ -4,17 +4,10 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const axios = require("axios");
 require("dotenv").config({ path: path.resolve(__dirname, "../../.env") });
-const {
-  setEncryptedCookie,
-  getDecryptedCookie,
-  removeEncryptedCookie,
-} = require("../../config/encrpyt");
+const { setEncryptedCookie, removeEncryptedCookie } = require("../../config/encrpyt");
 const router = express.Router();
 
-router.get(
-  "/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
-);
+router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 
 router.get(
   "/google/callback",
@@ -24,41 +17,11 @@ router.get(
   async function (req, res) {
     const token = generateToken(req.user);
 
-    const userData = {
-      token: token,
-      name: req.user.name,
-      roll: req.user.reg_no,
-      role: req.user.role,
-      id: req.user.id,
-      gmail: req.user.gmail,
-      profile: req.user.profilePhoto,
-    };
-    setEncryptedCookie(res, "userdata", JSON.stringify(userData));
+    setEncryptedCookie(res, "authToken", token);
 
-    const decryptedUserData = getDecryptedCookie(req, "userdata");
-    console.log("Decrypted User Data:", decryptedUserData);
-    
-
-    if (decryptedUserData) {
-      let parsedData;
-      parsedData = JSON.parse(decryptedUserData);
-     const { token, name, role, id, gmail, profile } = parsedData;
-    
-      console.log("Token:", token);
-      console.log("Name:", name);
-      console.log("Role:", role);
-      console.log("ID:", id);
-      console.log("Gmail:", gmail);
-      console.log("Profile Photo URL:", profile);
-    } else {
-      console.error("Failed to decrypt userdata or userdata is null.");
-    }
-    
     try {
       const role = req.user.role;
-      const response = await axios.get(
-        `${process.env.API_URL}/resources?role=${role}`
-      );
+      const response = await axios.get(`${process.env.API_URL}/resources?role=${role}`);
       const allowedRoutes = response.data;
 
       if (allowedRoutes.length > 0) {
@@ -77,16 +40,15 @@ router.get(
   }
 );
 
-
+// Function to generate JWT
 const generateToken = (user) => {
   const JWT_SECRET = process.env.JWT_SECRET;
   return jwt.sign(
     {
-      userId: user.id,
-      name: user.name,
-      roll: user.reg_no, 
-      role: user.role, 
       id: user.id,
+      name: user.name,
+      role: user.role,
+      reg_no:user.reg_no,
       gmail: user.gmail,
       profile: user.profilePhoto,
     },
@@ -95,18 +57,15 @@ const generateToken = (user) => {
   );
 };
 
-// Logout
 router.post("/logout", (req, res) => {
-  removeEncryptedCookie(res, "userData");
+  removeEncryptedCookie(res, "authToken");
 
-
-  req.logout((err) => { 
+  req.logout((err) => {
     if (err) {
       return res.status(500).json({ message: "Error during logout" });
     }
     return res.status(200).json({ message: "Logout successful" });
   });
 });
-
 
 module.exports = router;

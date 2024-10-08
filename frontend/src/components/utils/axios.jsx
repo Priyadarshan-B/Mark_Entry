@@ -1,17 +1,16 @@
 import axios from "axios";
 import { getDecryptedCookie } from "./encrypt";
-// import toast from "react-hot-toast";
 
 const apiHost = import.meta.env.VITE_API_HOST;
 
 const requestApi = async (method, url, data) => {
-
   try {
-    const token = getDecryptedCookie("userdata");
+    const decryptedUserData = getDecryptedCookie("authToken");
+
 
     const headers = {
       "Content-Type": "application/json",
-      ...(token && { "Authorization": `Bearer ${token}` })
+      ...(decryptedUserData && { Authorization: `Bearer ${decryptedUserData}` }),
     };
 
     let response;
@@ -35,12 +34,14 @@ const requestApi = async (method, url, data) => {
     if (!response) {
       throw new Error("No response from the server");
     }
- 
+
     return { success: true, data: response.data };
   } catch (error) {
-    // toast.error("Invalid Request..");
     console.error("Error in requestApi:", error);
-    return { success: false, error: error.response ? error.response.data : error.message };
+    return {
+      success: false,
+      error: error.response ? error.response.data : error.message,
+    };
   }
 };
 

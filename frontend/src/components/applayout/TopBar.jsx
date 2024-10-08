@@ -6,7 +6,8 @@ import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Popup from "../popup/popup";
-import CustomizedSwitches from './toggleTheme'
+import {jwtDecode} from 'jwt-decode';  
+import CustomizedSwitches from './toggleTheme';
 
 import "./styles.css";
 import { getDecryptedCookie, removeEncryptedCookie } from "../utils/encrypt";
@@ -18,10 +19,15 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   const navigate = useNavigate();
   const openMenu = Boolean(anchorEl);
 
-  const decryptedUserData = getDecryptedCookie("userdata")
-  let parsedData;
-  parsedData = JSON.parse(decryptedUserData);
-  const { name, profile, gmail } = parsedData;
+  const encryptedAuthToken = getDecryptedCookie("authToken");
+
+  if (!encryptedAuthToken) {
+    throw new Error("Auth token not found");
+  }
+
+  const decodedToken = jwtDecode(encryptedAuthToken);
+
+  const { name = "Guest", profile = "", gmail = "" } = decodedToken;
 
   useEffect(() => {
     const scrollElementRef = scrollElement;
@@ -63,8 +69,10 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   const logout = async () => {
     try {
       await requestApi("POST", "/auth/logout");
-      const cookiesToRemove = ["token", "name", "role", "id", "roll", "gmail", "profile", "allowedRoutes"];
-            cookiesToRemove.forEach((key) => removeEncryptedCookie(key));
+      const cookiesToRemove = [
+        "token", "name", "role", "id", "roll", "gmail", "profile", "allowedRoutes"
+      ];
+      cookiesToRemove.forEach((key) => removeEncryptedCookie(key));
       navigate("/login");
     } catch (error) {
       console.error("Logout failed", error);
@@ -83,23 +91,26 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
         }}
       >
         <div onClick={() => sidebar()} className="sidebar-menu">
-        <MenuRoundedIcon sx={{ color: "var(--text)", cursor: "pointer" }} />
-        </div> &nbsp;
+          <MenuRoundedIcon sx={{ color: "var(--text)", cursor: "pointer" }} />
+        </div>
+        &nbsp;
         <div>
-        {selectedSidebarItem && (
-              <h3 className="selected-sidebar-item">{selectedSidebarItem}</h3>
-            )}
+          {selectedSidebarItem && (
+            <h3 className="selected-sidebar-item">{selectedSidebarItem}</h3>
+          )}
+        </div>
       </div>
-      </div>
-    
 
       <div className="topbar-right-content">
         <CustomizedSwitches />
         <div className="user-info">
-        <img src={profile} alt="User Profile" className="user-profile-pic" onClick={handleClick}/>
-
+          <img
+            src={profile || "default-profile.png"} // Default image if no profile picture
+            alt="User Profile"
+            className="user-profile-pic"
+            onClick={handleClick}
+          />
           <p className="user-name">{name}</p>
-         
         </div>
         <Menu
           anchorEl={anchorEl}
@@ -173,7 +184,6 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
                 }}
               />
             )}
-
             <Typography
               variant="body2"
               sx={{ color: "var(--text)", fontWeight: "var(--f-weight)" }}

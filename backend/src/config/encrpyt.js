@@ -15,7 +15,7 @@ const decryptData = (encryptedData) => {
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   try {
     const parsedData = JSON.parse(decryptedData);
-    console.log("Parsed Decrypted Data:", parsedData); // Add this line for debugging
+    console.log("Parsed Decrypted Data:", parsedData);
     return parsedData;
   } catch (error) {
     console.error("Decryption failed", error);

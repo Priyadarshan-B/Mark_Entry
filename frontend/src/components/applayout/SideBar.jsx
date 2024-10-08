@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import BorderColorTwoToneIcon from '@mui/icons-material/BorderColorTwoTone';import SpaceDashboardTwoToneIcon from '@mui/icons-material/SpaceDashboardTwoTone';
+import BorderColorTwoToneIcon from '@mui/icons-material/BorderColorTwoTone';
+import SpaceDashboardTwoToneIcon from '@mui/icons-material/SpaceDashboardTwoTone';
 import requestApi from "../utils/axios";
+import {jwtDecode} from 'jwt-decode';  
 import "./styles.css";
 import { getDecryptedCookie } from "../utils/encrypt";
 
 function getIconComponent(iconPath) {
   switch (iconPath) {
     case 'BorderColorTwoToneIcon':
-      return <BorderColorTwoToneIcon style={{ color: '#f57d93' ,fontSize:'30px'}} className="custom-sidebar-icon" />;
-      case 'SpaceDashboardTwoToneIcon':
-        return <SpaceDashboardTwoToneIcon style={{ color: '#05ce78',fontSize:'30px' }} className="custom-sidebar-icon" />;
+      return <BorderColorTwoToneIcon style={{ color: '#f57d93', fontSize: '30px' }} className="custom-sidebar-icon" />;
+    case 'SpaceDashboardTwoToneIcon':
+      return <SpaceDashboardTwoToneIcon style={{ color: '#05ce78', fontSize: '30px' }} className="custom-sidebar-icon" />;
     default:
       return null;
   }
@@ -21,48 +23,42 @@ function SideBar({ open, resource, onSidebarItemSelect, handleSideBar }) {
   const [sidebarItems, setSidebarItems] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
-  const basePath = import.meta.env.VITE_BASE_PATH
+  const basePath = import.meta.env.VITE_BASE_PATH;
+
   useEffect(() => {
     const fetchSidebarItems = async () => {
       try {
-        const decryptedUserData = getDecryptedCookie("userdata");
-        let parsedData;
-        parsedData = JSON.parse(decryptedUserData);
-        const { role } = parsedData;
+        const encryptedAuthToken = getDecryptedCookie("authToken");
+        if (!encryptedAuthToken) {
+          throw new Error("Auth token not found");
+        }
 
-        // if (!role) {
-        //   navigate('/attendance/login');
-        //   return;
-        // }
+        const decodedToken = jwtDecode(encryptedAuthToken);
+        const { role } = decodedToken; 
+        console.log(role)
+
         const response = await requestApi("GET", `/resources?role=${role}`);
 
-        // if (response.status === 400) {
-        //   navigate("/attendance/login");
-        //   return;
-        // }
-
         if (response.success) {
-          setSidebarItems(response.data);
+          setSidebarItems(response.data); 
         } else {
           console.error("Error fetching sidebar items:", response.error);
-          // navigate("/attendance/login"); 
         }
       } catch (error) {
         console.error("Error fetching sidebar items:", error);
-        // navigate("/attendance/login"); 
       }
     };
 
-    fetchSidebarItems();
+    fetchSidebarItems(); 
   }, [resource, navigate]);
 
   useEffect(() => {
     const pathname = location.pathname;
-    const activeItem = sidebarItems.find((item) => `${basePath}`+item.path === pathname);
+    const activeItem = sidebarItems.find((item) => `${basePath}` + item.path === pathname);
     if (activeItem) {
       setActiveItem(activeItem.name);
       if (onSidebarItemSelect) {
-        onSidebarItemSelect(activeItem.name);
+        onSidebarItemSelect(activeItem.name);  
       }
     }
   }, [location, sidebarItems, onSidebarItemSelect]);
@@ -86,7 +82,7 @@ function SideBar({ open, resource, onSidebarItemSelect, handleSideBar }) {
               handleSideBar();
             }}
           >
-            <Link className="link" to={`${basePath}`+item.path}>
+            <Link className="link" to={`${basePath}` + item.path}>
               {getIconComponent(item.icon)}
               {item.name}
             </Link>
