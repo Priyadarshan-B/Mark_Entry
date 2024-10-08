@@ -50,19 +50,18 @@ passport.serializeUser((user, done) => {
   done(null, user.id);
 });
 
-passport.deserializeUser(async (id, done) => {
+passport.deserializeUser(async (gmail, done) => {
   try {
     const query = `
-      SELECT id, name, gmail, NULL AS reg_no,staff_id,  role 
+      SELECT id, name, gmail, NULL AS reg_no, staff_id, role 
       FROM faculty
-      WHERE id = ? 
+      WHERE gmail = ? 
       UNION  
-      SELECT id, name, gmail, reg_no, role
+      SELECT id, name, gmail, reg_no, NULL AS staff_id, role
       FROM students
-      WHERE id = ?
+      WHERE gmail = ?
     `;
-    
-    const results = await get_database(query, [id, id]);
+        const results = await get_database(query, [gmail, gmail]);
     
     if (results.length > 0) {
       return done(null, results[0]);

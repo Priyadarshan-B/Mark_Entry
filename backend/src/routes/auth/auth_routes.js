@@ -16,7 +16,6 @@ router.get(
   passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// Callback route
 router.get(
   "/google/callback",
   passport.authenticate("google", {
@@ -34,23 +33,33 @@ router.get(
       gmail: req.user.gmail,
       profile: req.user.profilePhoto,
     };
+    setEncryptedCookie(res, "userdata", JSON.stringify(userData));
 
-    setEncryptedCookie(res, "token", userData.token);
-    setEncryptedCookie(res, "name", userData.name);
-    setEncryptedCookie(res, "role", userData.role.toString());
-    setEncryptedCookie(res, "id", userData.id.toString());
-    setEncryptedCookie(res, "roll", userData.roll || "");
-    setEncryptedCookie(res, "gmail", userData.gmail);
-    setEncryptedCookie(res, "profile", userData.profile);
+    const decryptedUserData = getDecryptedCookie(req, "userdata");
+    console.log("Decrypted User Data:", decryptedUserData);
+    
 
-
+    if (decryptedUserData) {
+      let parsedData;
+      parsedData = JSON.parse(decryptedUserData);
+     const { token, name, role, id, gmail, profile } = parsedData;
+    
+      console.log("Token:", token);
+      console.log("Name:", name);
+      console.log("Role:", role);
+      console.log("ID:", id);
+      console.log("Gmail:", gmail);
+      console.log("Profile Photo URL:", profile);
+    } else {
+      console.error("Failed to decrypt userdata or userdata is null.");
+    }
+    
     try {
       const role = req.user.role;
       const response = await axios.get(
         `${process.env.API_URL}/resources?role=${role}`
       );
       const allowedRoutes = response.data;
-      console.log(allowedRoutes)
 
       if (allowedRoutes.length > 0) {
         const routes = allowedRoutes.map((route) => route.path);
@@ -68,14 +77,15 @@ router.get(
   }
 );
 
+
 const generateToken = (user) => {
   const JWT_SECRET = process.env.JWT_SECRET;
   return jwt.sign(
     {
       userId: user.id,
       name: user.name,
-      roll: user.register_number,
-      role: user.role_id,
+      roll: user.reg_no, 
+      role: user.role, 
       id: user.id,
       gmail: user.gmail,
       profile: user.profilePhoto,
@@ -88,13 +98,15 @@ const generateToken = (user) => {
 // Logout
 router.post("/logout", (req, res) => {
   removeEncryptedCookie(res, "userData");
+
+
   req.logout((err) => { 
     if (err) {
       return res.status(500).json({ message: "Error during logout" });
     }
     return res.status(200).json({ message: "Logout successful" });
   });
-}); 
+});
 
 
 module.exports = router;

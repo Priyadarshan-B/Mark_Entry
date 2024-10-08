@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getDecryptedCookie, removeEncryptedCookie } from "./encrypt"; 
+import { getDecryptedCookie } from "./encrypt"; 
 import Loader from "../Loader/loader";
 
 const ProtectedRoute = ({ children }) => {
@@ -12,14 +12,18 @@ const ProtectedRoute = ({ children }) => {
 
   useEffect(() => {
     const checkAuth = () => {
-      const token = getDecryptedCookie("token"); 
-      const allowedRoutes = getDecryptedCookie("allowedRoutes");  
+      const decryptedUserData = getDecryptedCookie("userdata"); 
+      const decryptedRoutes= getDecryptedCookie("allowedRoutes"); 
+
+      let parsedData;
+      parsedData = JSON.parse(decryptedUserData);
+      const { token } = parsedData;
       const currentPath = window.location.pathname;
 
-      if (token && allowedRoutes) {
+      if ( token && decryptedRoutes) {
         const adjustedCurrentPath = currentPath.replace(basePath, ""); 
 
-        if (allowedRoutes.includes(adjustedCurrentPath)) {
+        if (decryptedRoutes.includes(adjustedCurrentPath)) {
           setIsAuthenticated(true);  
         } else {
           setIsAuthenticated(false);  
@@ -34,10 +38,8 @@ const ProtectedRoute = ({ children }) => {
   }, [basePath]);
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      // const cookiesToRemove = ["token", "name", "role", "id", "roll", "gmail", "profile", "allowedRoutes"];
-      // cookiesToRemove.forEach((key) => removeEncryptedCookie(key));  
-      navigate("/attendance/error");  
+    if (!isLoading && !isAuthenticated) { 
+      navigate("/error");  
     }
   }, [isLoading, isAuthenticated, navigate]);
 

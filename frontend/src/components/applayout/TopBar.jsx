@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Popup from "../popup/popup";
 import CustomizedSwitches from './toggleTheme'
+
 import "./styles.css";
 import { getDecryptedCookie, removeEncryptedCookie } from "../utils/encrypt";
 
@@ -17,12 +18,10 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   const navigate = useNavigate();
   const openMenu = Boolean(anchorEl);
 
-  
-  
-
-  const name =  getDecryptedCookie("name");
-  const profile =  getDecryptedCookie("profile");
-  const gmail =  getDecryptedCookie("gmail");
+  const decryptedUserData = getDecryptedCookie("userdata")
+  let parsedData;
+  parsedData = JSON.parse(decryptedUserData);
+  const { name, profile, gmail } = parsedData;
 
   useEffect(() => {
     const scrollElementRef = scrollElement;
@@ -65,11 +64,11 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
     try {
       await requestApi("POST", "/auth/logout");
       const cookiesToRemove = ["token", "name", "role", "id", "roll", "gmail", "profile", "allowedRoutes"];
-          cookiesToRemove.forEach((key) => removeEncryptedCookie(key));
-      navigate("/attendance/login");
+            cookiesToRemove.forEach((key) => removeEncryptedCookie(key));
+      navigate("/login");
     } catch (error) {
       console.error("Logout failed", error);
-      navigate("/attendance/login");
+      navigate("/login");
     }
   };
 

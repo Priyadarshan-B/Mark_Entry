@@ -123,9 +123,7 @@
     .app-body{
         padding-bottom: 30px;
     }
-    .app-name{
-        display: none;
-    }   
+   
 }
 
 @media (max-width: 1370px) {
@@ -145,11 +143,15 @@
 
     .sidebar-open {
         display: block;
-        position: fixed;
+        position: relative;
         z-index: 600;
-        margin-top: 30px;
+        /* margin-top: 30px; */
         box-shadow: 0.1px 0.5px 0.9px 0.5px rgb(188, 188, 188);
     }
+    .a-name{
+        display: none;
+    }
+
  
 }
 
@@ -175,6 +177,7 @@
         display: none;
     }
    
+   
 }
 
 .topbar-right-content {
@@ -184,14 +187,14 @@
     gap: 5px;
 }
 
-.app-name {
+.a-name {
     margin: 0px 10px;
     padding: 10px 20px 20px 20px;
     font-weight: 700;
     color: var(--text);
     font-size: 20px;
     letter-spacing: 3px;
-    display: flex;
+    display: block;
     align-items: center;
     justify-content: center;
     gap: 10px;
@@ -200,7 +203,7 @@
 .list-div {
     list-style: none;
     padding: 0;
-    margin: 0;
+    margin-top: 0px;
     display: flex;
     flex-direction: column;
     gap: 2px;

@@ -41,3 +41,11 @@ export const removeEncryptedCookie = (key) => {
   const hashedKey = hashName(key);
   Cookies.remove(hashedKey);
 };
+
+// export const decrypt = (key)=>{
+//   const decryptedUserData = getDecryptedCookie("userdata");
+//   let parsedData;
+//   parsedData = JSON.parse(decryptedUserData);
+//   console.log(parsedData)
+//   const { key } = parsedData;
+// }

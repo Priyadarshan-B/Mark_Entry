@@ -10,7 +10,7 @@ function getIconComponent(iconPath) {
     case 'BorderColorTwoToneIcon':
       return <BorderColorTwoToneIcon style={{ color: '#f57d93' ,fontSize:'30px'}} className="custom-sidebar-icon" />;
       case 'SpaceDashboardTwoToneIcon':
-        return <SpaceDashboardTwoToneIcon style={{ color: '#0084ff',fontSize:'30px' }} className="custom-sidebar-icon" />;
+        return <SpaceDashboardTwoToneIcon style={{ color: '#05ce78',fontSize:'30px' }} className="custom-sidebar-icon" />;
     default:
       return null;
   }
@@ -25,7 +25,10 @@ function SideBar({ open, resource, onSidebarItemSelect, handleSideBar }) {
   useEffect(() => {
     const fetchSidebarItems = async () => {
       try {
-        const role = getDecryptedCookie("role");
+        const decryptedUserData = getDecryptedCookie("userdata");
+        let parsedData;
+        parsedData = JSON.parse(decryptedUserData);
+        const { role } = parsedData;
 
         // if (!role) {
         //   navigate('/attendance/login');
@@ -71,7 +74,7 @@ function SideBar({ open, resource, onSidebarItemSelect, handleSideBar }) {
         backgroundColor: "#2a3645",
       }}
     >
-      <p style={{ color: 'white' }} className="app-name">Mark entry</p>
+      <p style={{ color: 'white' }} className="a-name">Mark Entry</p>
       <ul className="list-div">
         {sidebarItems.map((item) => (
           <li

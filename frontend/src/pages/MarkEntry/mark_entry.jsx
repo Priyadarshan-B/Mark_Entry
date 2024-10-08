@@ -6,7 +6,7 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  Button as MUIButton,
+ 
 } from "@mui/material";
 import Button from "../../components/Button/Button";
 import requestApi from "../../components/utils/axios";
@@ -28,8 +28,12 @@ function MarkEntry() {
   const [maxMark, setMaxMark] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [pageSize] = useState(5);
-  const [searchTerm, setSearchTerm] = useState(""); // State for search input
-  const id = getDecryptedCookie("id");
+  const [searchTerm, setSearchTerm] = useState(""); 
+  const decryptedUserData = getDecryptedCookie("userdata");
+  let parsedData;
+  parsedData = JSON.parse(decryptedUserData);
+  console.log(parsedData)
+  const { id } = parsedData;
 
   useEffect(() => {
     const fetchCourses = async () => {

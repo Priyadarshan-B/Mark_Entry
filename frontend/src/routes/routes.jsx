@@ -4,6 +4,7 @@ import Login from "../pages/Login/Login";
 import Dashboard from "../pages/Dashboard/dashboard";
 import MarkEntry from "../pages/MarkEntry/mark_entry";
 import AppLayout from "../components/applayout/AppLayout";
+import ProtectedRoute from "../components/utils/protectedRoute";
 import Error from "../pages/error";
 
 const AppRoutes = () => {
@@ -18,6 +19,7 @@ const AppRoutes = () => {
       <Route
         path="/*"
         element={
+          <ProtectedRoute>
           <AppLayout
              body={
             <Routes>
@@ -26,6 +28,7 @@ const AppRoutes = () => {
             </Routes>
         }
           />
+          </ProtectedRoute>
         }
       />
     </Routes>

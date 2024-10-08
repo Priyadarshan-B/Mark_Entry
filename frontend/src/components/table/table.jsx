@@ -44,6 +44,9 @@ function MuiTableComponent() {
   }, []);
 
   useEffect(() => {
+    setRows([]);
+    setLoading(true);
+
     if (selectedCourse) {
       const fetchMarks = async () => {
         setLoading(true);
@@ -52,7 +55,7 @@ function MuiTableComponent() {
             "GET",
             `/marks-edit?course=${selectedCourse.value}`
           );
-          if (response.data) {
+          if (response.data && response.data.length > 0) {
             const data = response.data;
 
             const excludeColumns = [
@@ -93,11 +96,14 @@ function MuiTableComponent() {
 
             setColumns(columnDefs);
             setRows(formattedData);
+          }else{
+            setRows([]);
           }
           setLoading(false);
         } catch (error) {
           console.error("Error fetching data:", error);
           setLoading(false);
+          setRows([]); 
         }
       };
 
@@ -215,28 +221,51 @@ function MuiTableComponent() {
         "GET",
         `/marks-report?course=${selectedCourse.value}`
       );
-      const exportData = response.data.map((row) => ({
-        ...row,
-      }));
-
+  
+      
+      const exportData = response.data.map((row, index) => {
+        const updatedRow = { "S.No": index + 1 };
+        Object.keys(row).forEach((key) => {
+          if (key !== "id") { 
+            updatedRow[key] = row[key] === null ? "--" : row[key];
+          }
+        });
+        return updatedRow;
+      });
+  
       const ws = XLSX.utils.json_to_sheet(exportData);
+  
+      const colHeaders = Object.keys(exportData[0]);
+  
+      const colWidths = colHeaders.map((header) => {
+        const maxColLength = Math.max(
+          header.length, 
+          ...exportData.map((row) => (row[header] ? row[header].toString().length : 0)) 
+        );
+        return { wch: maxColLength + 2 }; 
+      });
+  
+      ws['!cols'] = colWidths;
+  
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Marks Data");
-
+  
       const fileName = `${selectedCourse.label.split(" - ")[0]} - ${
         selectedCourse.label.split(" - ")[1]
       }.xlsx`;
+  
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error("Error exporting data:", error);
     }
   };
+  
 
   return (
     <div style={{ width: "100%" }}>
       <h3>Student Marks Table</h3>
       <br />
-
+  
       <div className="select-course">
         <Select
           options={courses}
@@ -249,45 +278,52 @@ function MuiTableComponent() {
       <br />
       {!loading ? (
         <>
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pageSize={5}
-            disableSelectionOnClick
-            onCellClick={handleCellClick}
-            getRowId={(row) => row.id}
-          />
-          <Button
-            onClick={handleExport}
-            style={{ marginTop: "20px" }}
-            label="Export to Excel"
-          />
-
-          <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
-            <DialogTitle>Edit Marks</DialogTitle>
-            <DialogContent>
-              <p>Max Marks: {maxMark}</p>
-              <br />
-              <TextField
-                size="small"
-                label={
-                  selectedCell ? selectedCell.field.replace(/_/g, " ") : ""
-                }
-                value={editedMark}
-                onChange={handleMarkChange}
+          {rows.length > 0 ? (
+            <>
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                pageSize={5}
+                disableSelectionOnClick
+                onCellClick={handleCellClick}
+                getRowId={(row) => row.id}
               />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={() => setOpenEditModal(false)} label="Cancel" />
-              <Button onClick={saveEditedMark} label="Save" />
-            </DialogActions>
-          </Dialog>
+              <Button
+                onClick={handleExport}
+                style={{ marginTop: "20px" }}
+                label="Export to Excel"
+              />
+  
+              <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
+                <DialogTitle>Edit Marks</DialogTitle>
+                <DialogContent>
+                  <p>Max Marks: {maxMark}</p>
+                  <br />
+                  <TextField
+                    size="small"
+                    label={
+                      selectedCell ? selectedCell.field.replace(/_/g, " ") : ""
+                    }
+                    value={editedMark}
+                    onChange={handleMarkChange}
+                  />
+                </DialogContent>
+                <DialogActions>
+                  <Button onClick={() => setOpenEditModal(false)} label="Cancel" />
+                  <Button onClick={saveEditedMark} label="Save" />
+                </DialogActions>
+              </Dialog>
+            </>
+          ) : (
+            <p>No Records</p> // Display this message if rows are empty
+          )}
         </>
       ) : (
         <p>Select a Course to view Report...</p>
       )}
     </div>
   );
+  
 }
 
 export default MuiTableComponent;

@@ -4,6 +4,7 @@ const path = require('path');
 const morgan = require('morgan');
 const passport = require("passport");
 const session = require("express-session");
+const cookieParser = require('cookie-parser')
 const passportConfig = require("./config/passport");
 require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 
@@ -26,6 +27,7 @@ const morgan_config = morgan(
 
 const app = express();
 const port = process.env.PORT;
+app.use(cookieParser());
 
 // session
 app.use(
@@ -49,10 +51,11 @@ app.use(morgan_config);
 
 // auth routes
 app.use("/api/auth",auth_routes);
-// middleware
-// app.use([authJWT, limiter, restrictOrigin])
 // api routes
 app.use("/api",resources_routes);
+// middleware
+app.use([authJWT, limiter, restrictOrigin])
+
 app.use("/api",course)
 app.use("/api",student)
 app.use('/api',testtype)

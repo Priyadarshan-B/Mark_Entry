@@ -14,13 +14,14 @@ const decryptData = (encryptedData) => {
   const bytes = CryptoJS.AES.decrypt(encryptedData, secretKey);
   const decryptedData = bytes.toString(CryptoJS.enc.Utf8);
   try {
-    return JSON.parse(decryptedData);
+    const parsedData = JSON.parse(decryptedData);
+    console.log("Parsed Decrypted Data:", parsedData); // Add this line for debugging
+    return parsedData;
   } catch (error) {
     console.error("Decryption failed", error);
     return null; 
   }
-}; 
-
+};
 const setEncryptedCookie = (res, key, value) => {
   const hashedKey = hashName(key);
   const encryptedValue = encryptData(value);
