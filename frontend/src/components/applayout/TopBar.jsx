@@ -21,13 +21,21 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
 
   const encryptedAuthToken = getDecryptedCookie("authToken");
 
-  if (!encryptedAuthToken) {
-    throw new Error("Auth token not found");
+  let name = "Guest";
+  let profile = "";
+  let gmail = "";
+
+  if (encryptedAuthToken) {
+    try {
+      const decodedToken = jwtDecode(encryptedAuthToken);
+      ({ name = "Guest", profile = "", gmail = "" } = decodedToken);
+    } catch (error) {
+      console.error("Error decoding token", error);
+      navigate("/login");
+    }
+  } else {
+    navigate("/login");
   }
-
-  const decodedToken = jwtDecode(encryptedAuthToken);
-
-  const { name = "Guest", profile = "", gmail = "" } = decodedToken;
 
   useEffect(() => {
     const scrollElementRef = scrollElement;
@@ -69,10 +77,8 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   const logout = async () => {
     try {
       await requestApi("POST", "/auth/logout");
-      const cookiesToRemove = [
-        "token", "name", "role", "id", "roll", "gmail", "profile", "allowedRoutes"
-      ];
-      cookiesToRemove.forEach((key) => removeEncryptedCookie(key));
+      removeEncryptedCookie('authToken')
+      removeEncryptedCookie('allowedRoutes')
       navigate("/login");
     } catch (error) {
       console.error("Logout failed", error);
@@ -105,12 +111,18 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
         <CustomizedSwitches />
         <div className="user-info">
           <img
-            src={profile || "default-profile.png"} // Default image if no profile picture
+            src={profile || "abc.png"}
             alt="User Profile"
             className="user-profile-pic"
             onClick={handleClick}
           />
-          <p className="user-name">{name}</p>
+          <p className="user-name" 
+          style={{
+            cursor:'pointer'
+          }}
+            onClick={handleClick}
+          
+          >{name}</p>
         </div>
         <Menu
           anchorEl={anchorEl}
@@ -156,6 +168,7 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
                 borderRadius: "3px",
                 fontWeight: "var(--f-weight)",
               }}
+
             >
               {name}
             </Typography>

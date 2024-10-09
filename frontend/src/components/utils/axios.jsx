@@ -1,16 +1,32 @@
 import axios from "axios";
-import { getDecryptedCookie } from "./encrypt";
+import { getDecryptedCookie, removeEncryptedCookie } from "./encrypt";
+import {jwtDecode} from "jwt-decode";
 
 const apiHost = import.meta.env.VITE_API_HOST;
 
-const requestApi = async (method, url, data) => {
+const requestApi = async (method, url, data, navigate) => {
   try {
     const decryptedUserData = getDecryptedCookie("authToken");
 
+    if (!decryptedUserData) {
+      navigate('/login')
+      throw new Error("No auth token found. Please log in.");
+    }
+
+    const decodedToken = jwtDecode(decryptedUserData);
+    const currentTime = Date.now() / 1000; 
+
+    if (decodedToken.exp < currentTime) {
+      removeEncryptedCookie("authToken");
+
+      removeEncryptedCookie("allowedRoutes");
+      navigate("/login");
+      return { success: false, error: "Token expired. Redirecting to login." };
+    }
 
     const headers = {
       "Content-Type": "application/json",
-      ...(decryptedUserData && { Authorization: `Bearer ${decryptedUserData}` }),
+      Authorization: `Bearer ${decryptedUserData}`,
     };
 
     let response;
@@ -38,6 +54,14 @@ const requestApi = async (method, url, data) => {
     return { success: true, data: response.data };
   } catch (error) {
     console.error("Error in requestApi:", error);
+    if (error.response && error.response.status === 403) {
+      const errorMessage = error.response.data.message;
+      if (errorMessage === "Token has expired") {
+        removeEncryptedCookie("authToken");
+      removeEncryptedCookie("allowedRoutes");
+        navigate("/login");
+      }
+    }
     return {
       success: false,
       error: error.response ? error.response.data : error.message,

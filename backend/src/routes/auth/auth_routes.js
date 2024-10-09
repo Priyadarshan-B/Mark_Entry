@@ -40,7 +40,6 @@ router.get(
   }
 );
 
-// Function to generate JWT
 const generateToken = (user) => {
   const JWT_SECRET = process.env.JWT_SECRET;
   return jwt.sign(
@@ -59,6 +58,7 @@ const generateToken = (user) => {
 
 router.post("/logout", (req, res) => {
   removeEncryptedCookie(res, "authToken");
+  removeEncryptedCookie(res, 'allowedRoutes')
 
   req.logout((err) => {
     if (err) {

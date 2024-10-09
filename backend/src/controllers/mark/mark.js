@@ -127,6 +127,7 @@ exports.get_mark_edit = async(req, res)=>{
     s.id AS student,
     s.name AS 'STUDENT NAME',
     s.reg_no AS 'REGISTER NUMBER',
+    ye.year AS 'YEAR',
     c.code AS 'COURSE CODE',
     c.name AS 'COURSE NAME',
     MAX(CASE WHEN t.id = 1 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - I',
@@ -157,6 +158,7 @@ FROM
     students s
 LEFT JOIN 
     marks m ON s.id = m.student
+LEFT JOIN years ye ON s.year = ye.id
 LEFT JOIN 
     test_type t ON m.test_type = t.id
 LEFT JOIN 
