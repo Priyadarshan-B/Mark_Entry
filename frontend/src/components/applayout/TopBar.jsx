@@ -8,7 +8,6 @@ import Box from "@mui/material/Box";
 import Popup from "../popup/popup";
 import {jwtDecode} from 'jwt-decode';  
 import CustomizedSwitches from './toggleTheme';
-
 import "./styles.css";
 import { getDecryptedCookie, removeEncryptedCookie } from "../utils/encrypt";
 
@@ -19,15 +18,24 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   const navigate = useNavigate();
   const openMenu = Boolean(anchorEl);
 
+  // Check if the authToken exists in cookies
   const encryptedAuthToken = getDecryptedCookie("authToken");
 
-  if (!encryptedAuthToken) {
-    throw new Error("Auth token not found");
+  // Default user information if no token is present
+  let name = "Guest";
+  let profile = "";
+  let gmail = "";
+
+  if (encryptedAuthToken) {
+    try {
+      const decodedToken = jwtDecode(encryptedAuthToken);
+      name = decodedToken.name || "Guest";
+      profile = decodedToken.profile || "";
+      gmail = decodedToken.gmail || "";
+    } catch (error) {
+      console.error("Error decoding authToken", error);
+    }
   }
-
-  const decodedToken = jwtDecode(encryptedAuthToken);
-
-  const { name = "Guest", profile = "", gmail = "" } = decodedToken;
 
   useEffect(() => {
     const scrollElementRef = scrollElement;
@@ -105,7 +113,7 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
         <CustomizedSwitches />
         <div className="user-info">
           <img
-            src={profile || "default-profile.png"} // Default image if no profile picture
+            src={profile || "default-profile.png"} 
             alt="User Profile"
             className="user-profile-pic"
             onClick={handleClick}
