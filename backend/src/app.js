@@ -54,7 +54,7 @@ app.use("/api/auth",auth_routes);
 // api routes
 app.use("/api",resources_routes);
 // middleware
-app.use([authJWT, limiter, restrictOrigin])
+// app.use([authJWT, limiter, restrictOrigin])
 
 app.use("/api",course)
 app.use("/api",student)

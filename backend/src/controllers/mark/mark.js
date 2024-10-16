@@ -41,12 +41,12 @@ exports.get_mark_report = async(req, res)=>{
     s.reg_no AS 'REGISTER NUMBER',
     MAX(CASE WHEN t.id = 1 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - I',
     MAX(CASE WHEN t.id = 2 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - II',
-    MAX(CASE WHEN t.id = 3 THEN IFNULL(m.mark, 0) END) AS 'FORMATIVE ASSESSMENT',
     MAX(CASE WHEN t.id = 4 THEN IFNULL(m.mark, 0) END) AS 'LAB CYCLE',
     MAX(CASE WHEN t.id = 5 THEN IFNULL(m.mark, 0) END) AS 'TUTORIAL',
     SUM(CASE WHEN t.id IN (6, 7, 8) THEN IFNULL(m.mark, 0) END) AS 'ASSIGNMENT',
     SUM(CASE WHEN t.id IN (9, 10, 11) THEN IFNULL(m.mark, 0) END) AS 'OTHER ASSESSMENT',
-    MAX(CASE WHEN t.id = 12 THEN IFNULL(m.mark, 0) END) AS 'OPEN BOOK TEST'
+    MAX(CASE WHEN t.id = 12 THEN IFNULL(m.mark, 0) END) AS 'OPEN BOOK TEST',
+    IFNULL(fa.marks, 0) AS 'FORMATIVE ASSESSMENT' 
 FROM 
     students s
 LEFT JOIN 
@@ -55,10 +55,12 @@ LEFT JOIN
     test_type t ON m.test_type = t.id
 LEFT JOIN 
     course c ON m.course = c.id
+LEFT JOIN 
+    fa_marks fa ON s.reg_no = fa.student 
 WHERE 
     m.course = ?
 GROUP BY 
-    s.id, s.name, s.reg_no, c.code, c.name
+    s.id, s.name, s.reg_no, c.code, c.name, fa.marks
 ORDER BY 
     s.id;
 
@@ -127,14 +129,13 @@ exports.get_mark_edit = async(req, res)=>{
     s.id AS student,
     s.name AS 'STUDENT NAME',
     s.reg_no AS 'REGISTER NUMBER',
+    ye.year AS 'YEAR',
     c.code AS 'COURSE CODE',
     c.name AS 'COURSE NAME',
     MAX(CASE WHEN t.id = 1 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - I',
-    1 AS 'PERIODICAL_TEST_1_ID',  -- Include test type id for each test
+    1 AS 'PERIODICAL_TEST_1_ID', 
     MAX(CASE WHEN t.id = 2 THEN IFNULL(m.mark, 0) END) AS 'PERIODICAL TEST - II',
     2 AS 'PERIODICAL_TEST_2_ID',
-    MAX(CASE WHEN t.id = 3 THEN IFNULL(m.mark, 0) END) AS 'FORMATIVE ASSESSMENT',
-    3 AS 'FORMATIVE_ASSESSMENT_ID',
     MAX(CASE WHEN t.id = 4 THEN IFNULL(m.mark, 0) END) AS 'LAB CYCLE',
     4 AS 'LAB_CYCLE_ID',
     MAX(CASE WHEN t.id = 5 THEN IFNULL(m.mark, 0) END) AS 'TUTORIAL',
@@ -152,21 +153,28 @@ exports.get_mark_edit = async(req, res)=>{
     MAX(CASE WHEN t.id = 11 THEN IFNULL(m.mark, 0) END) AS 'OTHER ASSESSMENT 3',
     10 AS 'OTHER_ASSESSMENT_3_ID',
     MAX(CASE WHEN t.id = 12 THEN IFNULL(m.mark, 0) END) AS 'OPEN BOOK TEST',
-    12 AS 'OPEN_BOOK_TEST_ID'
+    12 AS 'OPEN_BOOK_TEST_ID',
+    IFNULL(fa.marks, 0) AS 'FORMATIVE ASSESSMENT',
+    m.edit_status AS 'EDIT STATUS' 
 FROM 
     students s
 LEFT JOIN 
     marks m ON s.id = m.student
 LEFT JOIN 
+    years ye ON s.year = ye.id
+LEFT JOIN 
     test_type t ON m.test_type = t.id
 LEFT JOIN 
     course c ON m.course = c.id
+LEFT JOIN 
+    fa_marks fa ON s.reg_no = fa.student 
 WHERE 
     m.course = ?
 GROUP BY 
-    s.id, s.name, s.reg_no, c.code, c.name
+    s.id, s.name, s.reg_no, c.code, c.name, fa.marks,m.edit_status
 ORDER BY 
     s.id;
+
 
 `
         const getMarksEdit = await get_database(query, [course])

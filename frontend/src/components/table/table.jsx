@@ -25,6 +25,7 @@ function MuiTableComponent() {
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editedMark, setEditedMark] = useState("");
   const [maxMark, setMaxMark] = useState(null); 
+  const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -62,7 +63,6 @@ function MuiTableComponent() {
               "student",
               "PERIODICAL_TEST_1_ID",
               "PERIODICAL_TEST_2_ID",
-              "FORMATIVE_ASSESSMENT_ID",
               "LAB_CYCLE_ID",
               "TUTORIAL_ID",
               "ASSIGNMENT_1_ID",
@@ -73,6 +73,7 @@ function MuiTableComponent() {
               "OTHER_ASSESSMENT_3_ID",
               "OPEN_BOOK_TEST_ID",
               "student_id",
+              "EDIT STATUS"
             ];
 
             const columnDefs = Object.keys(data[0])
@@ -90,7 +91,7 @@ function MuiTableComponent() {
                 for (const key in row) {
                   formattedRow[key] = row[key] === null ? "--" : row[key];
                 }
-              
+                formattedRow.editable = row["EDIT STATUS"] === "1";
                 return formattedRow;
               });
 
@@ -115,7 +116,6 @@ function MuiTableComponent() {
     const editableFields = [
       "PERIODICAL TEST - I",
       "PERIODICAL TEST - II",
-      "FORMATIVE ASSESSMENT",
       "LAB CYCLE",
       "TUTORIAL",
       "ASSIGNMENT 1",
@@ -127,7 +127,7 @@ function MuiTableComponent() {
       "OPEN BOOK TEST",
     ];
 
-    if (editableFields.includes(params.field)) {
+    if (editableFields.includes(params.field) && params.row.editable) {
       setSelectedCell(params);
       setEditedMark(params.value);
       setOpenEditModal(true);
@@ -135,7 +135,6 @@ function MuiTableComponent() {
       const testTypeMapping = {
         "PERIODICAL TEST - I": params.row.PERIODICAL_TEST_1_ID,
         "PERIODICAL TEST - II": params.row.PERIODICAL_TEST_2_ID,
-        "FORMATIVE ASSESSMENT": params.row.FORMATIVE_ASSESSMENT_ID,
         "LAB CYCLE": params.row.LAB_CYCLE_ID,
         TUTORIAL: params.row.TUTORIAL_ID,
         "ASSIGNMENT 1": params.row.ASSIGNMENT_1_ID,
@@ -176,7 +175,6 @@ function MuiTableComponent() {
     const testTypeMapping = {
       "PERIODICAL TEST - I": selectedCell.row.PERIODICAL_TEST_1_ID,
       "PERIODICAL TEST - II": selectedCell.row.PERIODICAL_TEST_2_ID,
-      "FORMATIVE ASSESSMENT": selectedCell.row.FORMATIVE_ASSESSMENT_ID,
       "LAB CYCLE": selectedCell.row.LAB_CYCLE_ID,
       TUTORIAL: selectedCell.row.TUTORIAL_ID,
       "ASSIGNMENT 1": selectedCell.row.ASSIGNMENT_1_ID,
@@ -213,6 +211,24 @@ function MuiTableComponent() {
         error: "Error Updating Marks...",
       }
     );
+  };
+  const handleSubmitMarks = () => {
+    setOpenSubmitDialog(true);
+  };
+  const confirmSubmitMarks = async () => {
+    setOpenSubmitDialog(false);
+
+    const marksToSubmit = rows.map((row) => ({
+      student: row.student,
+      course: selectedCourse.value,
+    }));
+    console.log(marksToSubmit)
+    try {
+      await requestApi("PUT", "/marks-status", marksToSubmit);
+      toast.success("Marks Submitted Successfully!");
+    } catch (error) {
+      toast.error("Error Submitting Marks...");
+    }
   };
 
   const handleExport = async () => {
@@ -288,6 +304,11 @@ function MuiTableComponent() {
                 onCellClick={handleCellClick}
                 getRowId={(row) => row.id}
               />
+               <Button
+                onClick={handleSubmitMarks}
+                style={{ marginTop: "20px" }}
+                label="Submit Marks"
+              />
               <Button
                 onClick={handleExport}
                 style={{ marginTop: "20px" }}
@@ -313,9 +334,27 @@ function MuiTableComponent() {
                   <Button onClick={saveEditedMark} label="Save" />
                 </DialogActions>
               </Dialog>
+
+              <Dialog
+        open={openSubmitDialog}
+        onClose={() => setOpenSubmitDialog(false)}
+      >
+        <DialogTitle>Confirm Submission</DialogTitle>
+        <DialogContent>
+          Are you sure you want to submit the marks? This action cannot be undone.
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenSubmitDialog(false)}
+            label="Cancel"
+            />
+          <Button onClick={confirmSubmitMarks}
+          label="Submit"
+          />
+        </DialogActions>
+      </Dialog>
             </>
           ) : (
-            <p>No Records</p> // Display this message if rows are empty
+            <p>No Records</p> 
           )}
         </>
       ) : (

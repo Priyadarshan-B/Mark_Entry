@@ -21,7 +21,6 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   // Check if the authToken exists in cookies
   const encryptedAuthToken = getDecryptedCookie("authToken");
 
-  // Default user information if no token is present
   let name = "Guest";
   let profile = "";
   let gmail = "";
@@ -29,12 +28,13 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   if (encryptedAuthToken) {
     try {
       const decodedToken = jwtDecode(encryptedAuthToken);
-      name = decodedToken.name || "Guest";
-      profile = decodedToken.profile || "";
-      gmail = decodedToken.gmail || "";
+      ({ name = "Guest", profile = "", gmail = "" } = decodedToken);
     } catch (error) {
-      console.error("Error decoding authToken", error);
+      console.error("Error decoding token", error);
+      navigate("/login");
     }
+  } else {
+    navigate("/login");
   }
 
   useEffect(() => {
@@ -77,10 +77,8 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
   const logout = async () => {
     try {
       await requestApi("POST", "/auth/logout");
-      const cookiesToRemove = [
-        "token", "name", "role", "id", "roll", "gmail", "profile", "allowedRoutes"
-      ];
-      cookiesToRemove.forEach((key) => removeEncryptedCookie(key));
+      removeEncryptedCookie('authToken')
+      removeEncryptedCookie('allowedRoutes')
       navigate("/login");
     } catch (error) {
       console.error("Logout failed", error);
@@ -113,12 +111,18 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
         <CustomizedSwitches />
         <div className="user-info">
           <img
-            src={profile || "default-profile.png"} 
+            src={profile || "abc.png"}
             alt="User Profile"
             className="user-profile-pic"
             onClick={handleClick}
           />
-          <p className="user-name">{name}</p>
+          <p className="user-name" 
+          style={{
+            cursor:'pointer'
+          }}
+            onClick={handleClick}
+          
+          >{name}</p>
         </div>
         <Menu
           anchorEl={anchorEl}
@@ -164,6 +168,7 @@ function TopBar({ scrollElement, sidebar, selectedSidebarItem }) {
                 borderRadius: "3px",
                 fontWeight: "var(--f-weight)",
               }}
+
             >
               {name}
             </Typography>

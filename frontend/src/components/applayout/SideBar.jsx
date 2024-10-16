@@ -35,7 +35,7 @@ function SideBar({ open, resource, onSidebarItemSelect, handleSideBar }) {
 
         const decodedToken = jwtDecode(encryptedAuthToken);
         const { role } = decodedToken; 
-        console.log(role)
+        // console.log(role)
 
         const response = await requestApi("GET", `/resources?role=${role}`);
 
