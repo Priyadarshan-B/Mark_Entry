@@ -24,8 +24,9 @@ function MuiTableComponent() {
   const [selectedCell, setSelectedCell] = useState(null);
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editedMark, setEditedMark] = useState("");
-  const [maxMark, setMaxMark] = useState(null); 
+  const [maxMark, setMaxMark] = useState(null);
   const [openSubmitDialog, setOpenSubmitDialog] = useState(false);
+  const [openRequestDialog, setOpenRequestDialog] = useState(false)
 
   useEffect(() => {
     const fetchCourses = async () => {
@@ -34,6 +35,7 @@ function MuiTableComponent() {
         const courseOptions = response.data.map((course) => ({
           value: course.id,
           label: `${course.code} - ${course.name}`,
+          edit_status: course.edit_status
         }));
         setCourses(courseOptions);
       } catch (error) {
@@ -44,72 +46,71 @@ function MuiTableComponent() {
     fetchCourses();
   }, []);
 
-  useEffect(() => {
+  const fetchMarks = async () => {
     setRows([]);
     setLoading(true);
 
     if (selectedCourse) {
-      const fetchMarks = async () => {
-        setLoading(true);
-        try {
-          const response = await requestApi(
-            "GET",
-            `/marks-edit?course=${selectedCourse.value}`
-          );
-          if (response.data && response.data.length > 0) {
-            const data = response.data;
+      setLoading(true);
+      try {
+        const response = await requestApi(
+          "GET",
+          `/marks-edit?course=${selectedCourse.value}`
+        );
+        if (response.data && response.data.length > 0) {
+          const data = response.data;
 
-            const excludeColumns = [
-              "student",
-              "PERIODICAL_TEST_1_ID",
-              "PERIODICAL_TEST_2_ID",
-              "LAB_CYCLE_ID",
-              "TUTORIAL_ID",
-              "ASSIGNMENT_1_ID",
-              "ASSIGNMENT_2_ID",
-              "ASSIGNMENT_3_ID",
-              "OTHER_ASSESSMENT_1_ID",
-              "OTHER_ASSESSMENT_2_ID",
-              "OTHER_ASSESSMENT_3_ID",
-              "OPEN_BOOK_TEST_ID",
-              "student_id",
-              "EDIT STATUS"
-            ];
+          const excludeColumns = [
+            "student",
+            "PERIODICAL_TEST_1_ID",
+            "PERIODICAL_TEST_2_ID",
+            "LAB_CYCLE_ID",
+            "TUTORIAL_ID",
+            "ASSIGNMENT_1_ID",
+            "ASSIGNMENT_2_ID",
+            "ASSIGNMENT_3_ID",
+            "OTHER_ASSESSMENT_1_ID",
+            "OTHER_ASSESSMENT_2_ID",
+            "OTHER_ASSESSMENT_3_ID",
+            "OPEN_BOOK_TEST_ID",
+            "student_id",
+            "EDIT STATUS",
+          ];
 
-            const columnDefs = Object.keys(data[0])
-              .filter((key) => !excludeColumns.includes(key))
-              .map((key) => ({
-                field: key,
-                headerName: key.replace(/_/g, " "),
-                width: 250,
-                editable: key.includes("TEST") || key.includes("ASSIGNMENT"), 
-              }));
+          const columnDefs = Object.keys(data[0])
+            .filter((key) => !excludeColumns.includes(key))
+            .map((key) => ({
+              field: key,
+              headerName: key.replace(/_/g, " "),
+              width: 250,
+              editable: key.includes("TEST") || key.includes("ASSIGNMENT"),
+            }));
 
-              const formattedData = data.map((row, index) => {
-                const formattedRow = { id: index };
-              
-                for (const key in row) {
-                  formattedRow[key] = row[key] === null ? "--" : row[key];
-                }
-                formattedRow.editable = row["EDIT STATUS"] === "1";
-                return formattedRow;
-              });
+          const formattedData = data.map((row, index) => {
+            const formattedRow = { id: index };
 
-            setColumns(columnDefs);
-            setRows(formattedData);
-          }else{
-            setRows([]);
-          }
-          setLoading(false);
-        } catch (error) {
-          console.error("Error fetching data:", error);
-          setLoading(false);
-          setRows([]); 
+            for (const key in row) {
+              formattedRow[key] = row[key] === null ? "--" : row[key];
+            }
+            formattedRow.editable = row["EDIT STATUS"] === "1";
+            return formattedRow;
+          });
+
+          setColumns(columnDefs);
+          setRows(formattedData);
+        } else {
+          setRows([]);
         }
-      };
-
-      fetchMarks();
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setLoading(false);
+        setRows([]);
+      }
     }
+  };
+  useEffect(() => {
+    fetchMarks();
   }, [selectedCourse]);
 
   const handleCellClick = async (params) => {
@@ -126,8 +127,12 @@ function MuiTableComponent() {
       "OTHER ASSESSMENT 3",
       "OPEN BOOK TEST",
     ];
-
-    if (editableFields.includes(params.field) && params.row.editable) {
+    console.log(selectedCourse.edit_status)
+    if (
+      selectedCourse?.edit_status === "1" &&
+      editableFields.includes(params.field) &&
+      params.row.editable
+    ) {
       setSelectedCell(params);
       setEditedMark(params.value);
       setOpenEditModal(true);
@@ -218,18 +223,37 @@ function MuiTableComponent() {
   const confirmSubmitMarks = async () => {
     setOpenSubmitDialog(false);
 
-    const marksToSubmit = rows.map((row) => ({
-      student: row.student,
+    const marksToSubmit = {
       course: selectedCourse.value,
-    }));
-    console.log(marksToSubmit)
+    };
+    console.log(marksToSubmit);
     try {
       await requestApi("PUT", "/marks-status", marksToSubmit);
       toast.success("Marks Submitted Successfully!");
+      
     } catch (error) {
       toast.error("Error Submitting Marks...");
     }
   };
+
+  const handleRequestEditMarks = () => {
+    setOpenRequestDialog(true);
+  };
+  const confirmEditMarks = async () => {
+    setOpenRequestDialog(false);
+
+    const marksToSubmit = {
+      course: selectedCourse.value,
+    };
+    console.log(marksToSubmit);
+    try {
+      await requestApi("PUT", "/marks-request", marksToSubmit);
+      toast.success("Request Send Successfull!");
+    } catch (error) {
+      toast.error("Request Failed to Send...");
+    }
+  };
+
 
   const handleExport = async () => {
     try {
@@ -237,51 +261,51 @@ function MuiTableComponent() {
         "GET",
         `/marks-report?course=${selectedCourse.value}`
       );
-  
-      
+
       const exportData = response.data.map((row, index) => {
         const updatedRow = { "S.No": index + 1 };
         Object.keys(row).forEach((key) => {
-          if (key !== "id") { 
+          if (key !== "id") {
             updatedRow[key] = row[key] === null ? "--" : row[key];
           }
         });
         return updatedRow;
       });
-  
+
       const ws = XLSX.utils.json_to_sheet(exportData);
-  
+
       const colHeaders = Object.keys(exportData[0]);
-  
+
       const colWidths = colHeaders.map((header) => {
         const maxColLength = Math.max(
-          header.length, 
-          ...exportData.map((row) => (row[header] ? row[header].toString().length : 0)) 
+          header.length,
+          ...exportData.map((row) =>
+            row[header] ? row[header].toString().length : 0
+          )
         );
-        return { wch: maxColLength + 2 }; 
+        return { wch: maxColLength + 2 };
       });
-  
-      ws['!cols'] = colWidths;
-  
+
+      ws["!cols"] = colWidths;
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Marks Data");
-  
+
       const fileName = `${selectedCourse.label.split(" - ")[0]} - ${
         selectedCourse.label.split(" - ")[1]
       }.xlsx`;
-  
+
       XLSX.writeFile(wb, fileName);
     } catch (error) {
       console.error("Error exporting data:", error);
     }
   };
-  
 
   return (
     <div style={{ width: "100%" }}>
       <h3>Student Marks Table</h3>
       <br />
-  
+
       <div className="select-course">
         <Select
           options={courses}
@@ -304,18 +328,29 @@ function MuiTableComponent() {
                 onCellClick={handleCellClick}
                 getRowId={(row) => row.id}
               />
-               <Button
+              {selectedCourse?.edit_status === "1" && (
+              <Button
                 onClick={handleSubmitMarks}
                 style={{ marginTop: "20px" }}
                 label="Submit Marks"
               />
+              )}
+              {selectedCourse?.edit_status === "2" && (
+              <Button
+                onClick={handleRequestEditMarks}
+                style={{ marginTop: "20px" }}
+                label="Request Edit"
+              />
+              )}
               <Button
                 onClick={handleExport}
                 style={{ marginTop: "20px" }}
                 label="Export to Excel"
               />
-  
-              <Dialog open={openEditModal} onClose={() => setOpenEditModal(false)}>
+              <Dialog
+                open={openEditModal}
+                onClose={() => setOpenEditModal(false)}
+              >
                 <DialogTitle>Edit Marks</DialogTitle>
                 <DialogContent>
                   <p>Max Marks: {maxMark}</p>
@@ -330,31 +365,50 @@ function MuiTableComponent() {
                   />
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={() => setOpenEditModal(false)} label="Cancel" />
+                  <Button
+                    onClick={() => setOpenEditModal(false)}
+                    label="Cancel"
+                  />
                   <Button onClick={saveEditedMark} label="Save" />
+                </DialogActions>
+              </Dialog>
+              <Dialog
+                open={openSubmitDialog}
+                onClose={() => setOpenSubmitDialog(false)}
+              >
+                <DialogTitle>Confirm Submission</DialogTitle>
+                <DialogContent>
+                  Are you sure you want to submit the marks? This action cannot
+                  be undone.
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    onClick={() => setOpenSubmitDialog(false)}
+                    label="Cancel"
+                  />
+                  <Button onClick={confirmSubmitMarks} label="Submit" />
                 </DialogActions>
               </Dialog>
 
               <Dialog
-        open={openSubmitDialog}
-        onClose={() => setOpenSubmitDialog(false)}
-      >
-        <DialogTitle>Confirm Submission</DialogTitle>
-        <DialogContent>
-          Are you sure you want to submit the marks? This action cannot be undone.
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenSubmitDialog(false)}
-            label="Cancel"
-            />
-          <Button onClick={confirmSubmitMarks}
-          label="Submit"
-          />
-        </DialogActions>
-      </Dialog>
+                open={openRequestDialog}
+                onClose={() => setOpenRequestDialog(false)}
+              >
+                <DialogTitle>Confirm Submission</DialogTitle>
+                <DialogContent>
+                  Are you sure you want Request for Edit Marks ?
+                </DialogContent>
+                <DialogActions>
+                  <Button
+                    onClick={() => setOpenRequestDialog(false)}
+                    label="Cancel"
+                  />
+                  <Button onClick={confirmEditMarks} label="Submit" />
+                </DialogActions>
+              </Dialog>
             </>
           ) : (
-            <p>No Records</p> 
+            <p>No Records</p>
           )}
         </>
       ) : (
@@ -362,7 +416,6 @@ function MuiTableComponent() {
       )}
     </div>
   );
-  
 }
 
 export default MuiTableComponent;

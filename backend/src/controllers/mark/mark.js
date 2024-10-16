@@ -155,7 +155,7 @@ exports.get_mark_edit = async(req, res)=>{
     MAX(CASE WHEN t.id = 12 THEN IFNULL(m.mark, 0) END) AS 'OPEN BOOK TEST',
     12 AS 'OPEN_BOOK_TEST_ID',
     IFNULL(fa.marks, 0) AS 'FORMATIVE ASSESSMENT',
-    m.edit_status AS 'EDIT STATUS' 
+    d.edit_status AS 'EDIT STATUS' 
 FROM 
     students s
 LEFT JOIN 
@@ -168,14 +168,14 @@ LEFT JOIN
     course c ON m.course = c.id
 LEFT JOIN 
     fa_marks fa ON s.reg_no = fa.student 
+LEFT JOIN
+    due_dates d ON s.year = d.year
 WHERE 
     m.course = ?
 GROUP BY 
-    s.id, s.name, s.reg_no, c.code, c.name, fa.marks,m.edit_status
+    s.id, s.name, s.reg_no, c.code, c.name, fa.marks,d.edit_status
 ORDER BY 
     s.id;
-
-
 `
         const getMarksEdit = await get_database(query, [course])
         res.json(getMarksEdit)
