@@ -1,0 +1,13 @@
+.approval-container{
+    display: flex;
+    gap: 25px;
+    flex-wrap: wrap;
+}
+.approval-card{
+    background-color: var(--background-2);
+    padding: 20px;
+    border-radius: 10px;
+    flex: 1;
+    min-width: 300px;
+
+}

@@ -21,6 +21,7 @@ const student = require('./routes/student/student')
 const testtype = require('./routes/test_type/test_type')
 const mark = require('./routes/marks/marks')
 const EditMarks = require('./routes/marks/editStatus')
+const approval = require('./routes/approval/approval')
 
 const morgan_config = morgan(
     ":method :url :status :res[content-length] - :response-time ms"
@@ -62,6 +63,8 @@ app.use("/api",student)
 app.use('/api',testtype)
 app.use('/api',mark)
 app.use('/api',EditMarks)
+app.use('/api',approval)
+
  
 // port
 app.listen(port, () => {
