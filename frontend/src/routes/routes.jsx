@@ -5,7 +5,7 @@ import Dashboard from "../pages/Dashboard/dashboard";
 import MarkEntry from "../pages/MarkEntry/mark_entry";
 import AppLayout from "../components/applayout/AppLayout";
 import ProtectedRoute from "../components/utils/protectedRoute";
-import Approval from "../pages/CourseApproval/course_approval";
+import Approval from "../pages/Approval/approval";
 import Error from "../pages/error";
 
 const AppRoutes = () => {

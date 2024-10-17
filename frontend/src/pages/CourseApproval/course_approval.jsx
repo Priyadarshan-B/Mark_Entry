@@ -15,7 +15,7 @@ import Button from "../../components/Button/Button";
 import dayjs from "dayjs";
 import './course_approval.css'
 
-function Approval() {
+function CourseApproval() {
   const [approvals, setApprovals] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
@@ -134,10 +134,9 @@ function Approval() {
         <DialogTitle>Request Approval</DialogTitle>
         <DialogContent>
             <p>Are you sure you want to approve?</p> 
-            <br />
-
           <LocalizationProvider dateAdapter={AdapterDayjs}>
             <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+              <br />
                 <DatePicker
                   label="Select Date"
                   value={selectedDate}
@@ -152,9 +151,7 @@ function Approval() {
                   onChange={(newValue) => setSelectedTime(newValue)}
                   minTime={selectedDate && selectedDate.isSame(dayjs(), 'day') ? dayjs() : null} 
                   renderInput={(params) => <TextField {...params}  />}
-                  slotProps={{ textField: { size: 'small' } }}
-
-                />
+                  slotProps={{ textField: { size: 'small' } }}   />
             </div>
           </LocalizationProvider>
         </DialogContent>
@@ -167,4 +164,4 @@ function Approval() {
   );
 }
 
-export default Approval;
+export default CourseApproval;

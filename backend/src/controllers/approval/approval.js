@@ -53,7 +53,13 @@ exports.get_CourseApproval = async(req, res)=>{
         WHERE id =? AND status = '1'
         `
         const cApproval = await post_database(query, [date , course])
-        res.json(cApproval)
+
+        const updateRequest = `
+        UPDATE request SET status = '2'
+        WHERE course = ? AND status = '1'
+        `
+        const updateReq = await post_database(updateRequest, [course])
+        return res.json({cApproval, updateReq})
     }
     catch(err){
         console.error("Error Updating course Request", err);

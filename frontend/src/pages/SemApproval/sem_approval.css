@@ -1,0 +1,10 @@
+.card {
+    padding: 16px;
+    margin: 16px 0;
+    border-radius: 8px;
+    background-color: var(--background-2);
+  }
+  .buttons {
+    display: flex;
+    gap: 8px;
+  }
