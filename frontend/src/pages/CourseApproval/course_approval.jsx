@@ -10,17 +10,21 @@ import {
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs"; 
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import Button from "../../components/Button/Button";
+import AButton from "../../components/Button/ApproveButton";
+import RButton from "../../components/Button/RejectButton";
 import dayjs from "dayjs";
-import './course_approval.css'
+import "./course_approval.css";
 
 function CourseApproval() {
   const [approvals, setApprovals] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openRejectDialog, setOpenRejectDialog] = useState(false); // New state for reject dialog
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
   const [selectedApprovalId, setSelectedApprovalId] = useState(null);
+  const [rejectReason, setRejectReason] = useState(""); // State for reject reason
 
   const fetchApprovalData = async () => {
     try {
@@ -46,26 +50,29 @@ function CourseApproval() {
     setSelectedTime(null);
   };
 
+  const handleRejectDialogClose = () => {
+    setOpenRejectDialog(false); // Close reject dialog
+    setRejectReason(""); // Clear reason
+  };
+
   const handleConfirm = async () => {
     if (!selectedDate || !selectedTime) {
       alert("Please select both a date and time.");
       return;
     }
-  
+
     const selectedDateTime = dayjs(selectedDate)
       .set("hour", selectedTime.hour())
       .set("minute", selectedTime.minute())
-      .set("second", 0); 
-  
+      .set("second", 0);
+
     const formattedDateTime = selectedDateTime.format("YYYY-MM-DD HH:mm:ss");
-  
+
     try {
       await requestApi("PUT", "/c-approve", {
         course: selectedApprovalId,
-        date: formattedDateTime, 
+        date: formattedDateTime,
       });
-      console.log(selectedApprovalId)
-      console.log(formattedDateTime); 
       fetchApprovalData();
       handleDialogClose();
     } catch (error) {
@@ -73,12 +80,26 @@ function CourseApproval() {
     }
   };
 
-  const handleReject = async (id) => {
+  const handleReject = (id) => {
+    setSelectedApprovalId(id); 
+    setOpenRejectDialog(true);
+  };
+
+  const handleRejectConfirm = async () => {
+    if (!rejectReason) {
+      ("Please provide a reason for rejection.");
+      return;
+    }
+
     try {
-      await requestApi("POST", "/reject", { id });
+      await requestApi("PUT", "/c-reject", {
+        course: selectedApprovalId,
+        reason: rejectReason,
+      });
       fetchApprovalData();
+      handleRejectDialogClose(); 
     } catch (error) {
-      console.error("Error rejecting request:", error);
+      console.error("Error rejecting request with reason:", error);
     }
   };
 
@@ -109,18 +130,14 @@ function CourseApproval() {
                 </p>
                 <br />
                 <div className="button-group">
-                  <Button
-          
+                  <AButton
                     onClick={() => handleApprove(approval.course)}
-                  
-                    label= "Approve"/>
-                
-                  <Button
-   
-                    onClick={() => handleReject(approval.id)}
-                  
-                    label="Reject"/>
-               
+                    label="Approve"
+                  />
+                  <RButton
+                    onClick={() => handleReject(approval.course)} // Trigger the reject dialog
+                    label="Reject"
+                  />
                 </div>
               </div>
             </div>
@@ -133,31 +150,54 @@ function CourseApproval() {
       <Dialog open={openDialog} onClose={handleDialogClose} fullWidth>
         <DialogTitle>Request Approval</DialogTitle>
         <DialogContent>
-            <p>Are you sure you want to approve?</p> 
+          <p>Are you sure you want to approve?</p>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <div style={{display:'flex', flexDirection:'column', gap:'15px'}}>
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+            >
               <br />
-                <DatePicker
-                  label="Select Date"
-                  value={selectedDate}
-                  onChange={(newValue) => setSelectedDate(newValue)}
-                  slotProps={{ textField: { size: 'small' } }}
-                  minDate={dayjs()} 
-                  renderInput={(params) => <TextField {...params}   />}
-                />
-                <TimePicker
-                  label="Select Time"
-                  value={selectedTime}
-                  onChange={(newValue) => setSelectedTime(newValue)}
-                  minTime={selectedDate && selectedDate.isSame(dayjs(), 'day') ? dayjs() : null} 
-                  renderInput={(params) => <TextField {...params}  />}
-                  slotProps={{ textField: { size: 'small' } }}   />
+              <DatePicker
+                label="Select Date"
+                value={selectedDate}
+                onChange={(newValue) => setSelectedDate(newValue)}
+                slotProps={{ textField: { size: "small" } }}
+                minDate={dayjs()}
+              />
+              <TimePicker
+                label="Select Time"
+                value={selectedTime}
+                onChange={(newValue) => setSelectedTime(newValue)}
+                minTime={
+                  selectedDate && selectedDate.isSame(dayjs(), "day")
+                    ? dayjs()
+                    : null
+                }
+              />
             </div>
           </LocalizationProvider>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose}label = "Cancel"/>
-          <Button onClick={handleConfirm}label = "Confirm"/>
+          <Button onClick={handleDialogClose} label="Cancel" />
+          <Button onClick={handleConfirm} label="Confirm" />
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openRejectDialog} onClose={handleRejectDialogClose} fullWidth>
+        <DialogTitle>Reject Request</DialogTitle>
+        <DialogContent>
+          <p>Are you sure you want to reject this request?</p><br />
+          <TextField
+            label="Reason for rejection"
+            fullWidth
+            multiline
+            rows={4}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRejectDialogClose} label="Cancel" />
+          <Button onClick={handleRejectConfirm} label="Confirm" />
         </DialogActions>
       </Dialog>
     </div>

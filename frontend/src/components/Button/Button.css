@@ -16,3 +16,109 @@
 .button:hover{
     background-color: #9be3d2;
 }
+
+/* download-button */
+.d-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #788da6;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .d-button:disabled {
+    background-color: #d4d4d4;
+    cursor: not-allowed;
+    color: gray;
+  }
+  
+  .d-button:hover:not(:disabled) {
+    background-color: #6d88a9;
+  }
+  
+  .button-icon {
+    margin-right: 8px;
+    font-size: 20px; 
+  }
+  
+  .button-label {
+    font-weight: bold;
+  }
+  
+  .r-button{
+    padding: 7px 20px;
+    border: none;
+    color: black;
+    background-color: #f89898;
+    border-radius: 5px;
+    border: 1px solid #ff0000;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 5px;
+  }
+
+  .r-button:hover{
+    background-color: #fe8282;
+}
+
+.a-button{
+    padding: 7px 20px;
+    border: none;
+    color: black;
+    background-color: #98f8c2;
+    border-radius: 5px;
+    border: 1px solid #00ff5e;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin: 5px;
+  }
+
+  .a-button:hover{
+    background-color: #82fec2;
+}
+
+.e-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #84e0be;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .e-button:disabled {
+    background-color: #d4d4d4;
+    cursor: not-allowed;
+    color: gray;
+  }
+  
+  .e-button:hover:not(:disabled) {
+    background-color: #9be3d2;
+  }
+  
+  .button-icon {
+    margin-right: 8px;
+    font-size: 20px; 
+  }
+  
+  .button-label {
+    font-weight: bold;
+  }
+  

@@ -5,6 +5,7 @@ const SemApproval = require('../../controllers/approval/sem_approval')
 
 router.post('/approvals', approval.get_approvalCourse)
 router.put('/c-approve',approval.get_CourseApproval)
+router.put('/c-reject', approval.CourseAppReject)
 router.put('/s-approval',approval.SemApproval)
 
 router.get('/sem-approval', SemApproval.getSemApp)

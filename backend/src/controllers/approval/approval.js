@@ -66,3 +66,21 @@ exports.get_CourseApproval = async(req, res)=>{
         res.status(500).json({ error: "Error Updating course Request" });
        }
 }
+
+exports.CourseAppReject = async(req, res)=>{
+    const {course, reason}= req.body
+    if(!course || !reason){
+        return res.status(400).json({error:"Course and faculty are required..."})
+    }
+    try{
+        const query = `
+        UPDATE request SET status = '-1' , reason = ? 
+        WHERE course = ? AND status = '1'
+        `
+        const Reject = await post_database(query, [reason, course])
+        res.json(Reject)
+    }catch(err){
+        console.error("Error Rejecting course Request", err);
+        res.status(500).json({ error: "Error Rejecting course Request" }); 
+    }
+}
