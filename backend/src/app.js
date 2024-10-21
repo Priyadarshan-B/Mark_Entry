@@ -12,7 +12,8 @@ require("dotenv").config({ path: path.resolve(__dirname, "../.env") });
 const authJWT = require('./middleware/authenticate')
 const limiter = require('./middleware/rateLimiter')
 const restrictOrigin = require('./middleware/restrictOrigins')
-
+// crons
+const CronJobs = require('./controllers/cron/cronJobs')
 // routes import
 const auth_routes = require('./routes/auth/auth_routes')
 const resources_routes = require('./routes/auth/res_route')
@@ -65,6 +66,7 @@ app.use('/api',mark)
 app.use('/api',EditMarks)
 app.use('/api',approval)
 
+// CronJobs()
  
 // port
 app.listen(port, () => {

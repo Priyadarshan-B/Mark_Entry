@@ -47,6 +47,7 @@ function MuiTableComponent() {
           value: course.id,
           label: `${course.code} - ${course.name}`,
           edit_status: course.edit_status,
+          due_date_status: course.due_date_status
         }));
         setCourses(courseOptions);
       } catch (error) {
@@ -86,6 +87,7 @@ function MuiTableComponent() {
               "OPEN_BOOK_TEST_ID",
               "student_id",
               "EDIT STATUS",
+              "STATUS"
             ];
 
             const columnDefs = Object.keys(data[0])
@@ -103,6 +105,7 @@ function MuiTableComponent() {
               for (const key in row) {
                 formattedRow[key] = row[key] === null ? "--" : row[key];
               }
+              formattedRow.status = row["STATUS"]; 
               formattedRow.editable = row["EDIT STATUS"] === "1";
               return formattedRow;
             });
@@ -371,14 +374,14 @@ function MuiTableComponent() {
                 getRowId={(row) => row.id}
                 editMode="false"
               />
-              {selectedCourse?.edit_status === "1" && (
+              {selectedCourse?.edit_status === "1" && selectedCourse.due_date_status === 1 && (
                 <Button
                   onClick={handleSubmitMarks}
                   style={{ marginTop: "20px" }}
                   label="Submit Marks"
                 />
               )}
-              {selectedCourse?.edit_status === "2" && (
+              {selectedCourse?.edit_status === "2" && selectedCourse.due_date_status === 1 && (
                 <Button
                   onClick={handleRequestEditMarks}
                   style={{ marginTop: "20px" }}
@@ -390,6 +393,7 @@ function MuiTableComponent() {
                 style={{ marginTop: "20px" }}
                 label="Export to Excel"
               />
+
               {/* Edit Modal */}
               <Dialog
                 fullWidth

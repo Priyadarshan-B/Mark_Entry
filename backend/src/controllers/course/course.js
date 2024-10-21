@@ -21,14 +21,27 @@ exports.get_course = async (req, res) => {
 }
 
 exports.get_Allcourse = async (req, res) => {
-    try{
+    try {
         const query = `
-        SELECT * FROM course;
-        `
-        const course = await get_database(query)
+        SELECT 
+            id, 
+            code, 
+            name, 
+            department, 
+            edit_status, 
+            due_date, 
+            count, 
+            status,
+            IF(NOW() > due_date, 0, 1) AS due_date_status
+        FROM 
+            course 
+        WHERE 
+            status = '1';
+        `;
+        const course = await get_database(query);
         res.json(course);
-    }catch(err){
+    } catch (err) {
         console.error("Error fetching Course", err);
         res.status(500).json({ error: "Error fetching Course" });
     }
-}
+};

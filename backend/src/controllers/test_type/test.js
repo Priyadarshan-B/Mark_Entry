@@ -3,7 +3,7 @@ const { get_database } = require("../../config/db_utils");
 exports.get_test = async(req, res)=>{
     try{
         const query = `
-        SELECT * FROM test_type;
+        SELECT * FROM test_type WHERE status = '1';
         `
         const test = await get_database(query)
         res.json(test)
